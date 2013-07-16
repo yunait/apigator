@@ -1,0 +1,21 @@
+{
+    "name": "yunait/apigator",
+    "homepage": "http://github.com/yunait/apigator",
+    "minimum-stability": "dev",
+    "repositories": [
+        { "type": "vcs", "url": "git@github.com:yunait/core.git" },
+        { "type": "vcs", "url": "git@github.com:yunait/core-daily.git" },
+        { "type": "vcs", "url": "git@github.com:yunait/core-business.git" },
+        { "type": "vcs", "url": "git@github.com:yunait/locale-daily.git" }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "yunait/level3": "*",
+        "mongator/mongator": "v1.2.1"
+    },
+    "autoload": {
+        "psr-0": {
+            "Yunait\\Apigator": "src/"
+        }
+    }
+}
