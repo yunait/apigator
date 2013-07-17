@@ -15,7 +15,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Yunait\\Apigator": "src/"
+            "Core\\Commands\\API": "src/",
+            "API": "src/"
         }
     }
 }
