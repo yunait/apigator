@@ -7,176 +7,161 @@ use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 use Mandango\Mondator\Extension;
-use Yunait\Apigator\Mondator\Definition\DefinitionFactory;
-use Yunait\Apigator\Mondator\OutputFactory;
 
 class ResourceBuilderBaseExtension extends ApigatorExtension
 {
-    const CLASSES_NAMESPACE = 'Resources\\Builder';
-
-    private $outputFactory;
-    private $definitionFactory;
+    const CLASSES_NAMESPACE = 'Resources\\Base\\Builder';
+    const CLASSES_PREFIX = 'Base';
+    const CLASSES_SUFFIX = '';
 
     public function __construct($options = array())
     {
         parent::__construct($options);
-        $this->setOutputFactory($this->getOption('outputFactory'));
-        $this->setDefinitionFactory($this->getOption('definitionFactory'));
+
+        $this->classesNamespace = self::CLASSES_NAMESPACE;
+        $this->classesPrefix = self::CLASSES_PREFIX;
+        $this->classesSuffix = self::CLASSES_SUFFIX;
     }
 
-    private function setOutputFactory(OutputFactory $outputFactory)
-    {
-        $this->outputFactory = $outputFactory;
-    }
-
-    private function setDefinitionFactory(DefinitionFactory $definitionFactory){
-        $this->definitionFactory = $definitionFactory;
-    }
-
-    protected function setup()
-    {
-        $this->addRequiredOption('output');
-        $this->addRequiredOption('namespace');
-        $this->addRequiredOption('outputFactory');
-        $this->addRequiredOption('definitionFactory');
-    }
-
-    protected function doClassProcess()
-    {
-        if ($this->configClass['isEmbedded']) {
-            return;
-        }
-
-        $this->generateClass();
-    }
-
-    private function generateClass()
+    protected function generateClass()
     {
         $output = $this->outputFactory->create($this->getOption('output'), true);
-        $targetClassName = $this->getTargetClass($this->getClassName());
+        $targetClassName = $this->getTargetClass('');
         $definition = $this->definitionFactory->create($targetClassName, $output);
 
-        $this->definitions['baseResource'] = $definition;
-        $definition->setParentClass('\\Level3\\Repository');
+        $this->definitions['baseBuilder'] = $definition;
+        $definition->setAbstract(true);
         $this->addFieldsToDefinition($definition);
-
-        $definition->addMethod($this->createConstructorMethod());
-        $definition->addMethod($this->createGetAppMethod());
-        $definition->addMethod($this->createGetDocumentMethod());
-        $definition->addMethod($this->createGetDocumentRepositoryMethod());
-        $definition->addMethod($this->createConvertRangeToPageNumber());
-        $definition->addMethod($this->createConvertRangeToPageSize());
-
-
-    }
-
-
-    private function createConvertRangeToPageSize()
-    {
-        $method = new Method('protected', 'convertRangeToPageSize', '$lowerBound = 0, $upperBound = 0',
-<<<EOF
-        \$pageSize = \$upperBound - \$lowerBound;
-
-        if (\$pageSize > self::MAX_PAGE_SIZE) return self::MAX_PAGE_SIZE;
-        if (\$pageSize == 0) return self::MAX_PAGE_SIZE;
-        return \$pageSize;
-EOF
-        );
-        return $method;
-    }
-
-
-    private function createConvertRangeToPageNumber()
-    {
-        $method = new Method('protected', 'convertRangeToPageNumber', '$lowerBound = 0, $upperBound = 0',
-<<<EOF
-        \$pageSize = \$this->convertRangeToPageSize(\$lowerBound, \$upperBound);
-
-        return intval(\$lowerBound/\$pageSize);
-EOF
-        );
-        return $method;
-    }
-
-    private function createGetDocumentRepositoryMethod()
-    {
-        $method = new Method('protected', 'getDocumentRepository', '',
-<<<EOF
-        return \$this->app['core']->get(\$this->documentRepository);
-EOF
-        );
-        return $method;
-    }
-
-    private function createGetDocumentMethod()
-    {
-        $method = new Method('protected', 'getDocument', '$id',
-<<<EOF
-        \$result = \$this->getDocumentepository()->getRepository()->findById([\$id]);
-        if (\$result) return end(\$result);
-        return null;
-EOF
-        );
-        return $method;
-    }
-
-    private function createGetAppMethod()
-    {
-        $method = new Method('protected', 'getApp', '',
-<<<EOF
-        return \$this->app;
-EOF
-        );
-        return $method;
-    }
-
-    private function createConstructorMethod()
-    {
-        $constructor = new Method('public', '__construct', 'Silex\\Application $app',
-<<<EOF
-        \$this->app = \$app;
-        \$this->cache = [];
-EOF
-        );
-        return $constructor;
+        $this->addMethodsToDefinition($definition);
     }
 
     private function addFieldsToDefinition(Definition $definition)
     {
-        $maxPageSize = new Constant('MAX_PAGE_SIZE', 100);
-        $definition->addConstant($maxPageSize);
-
-        $cache = new Property('private', 'cache', null);
-        $definition->addProperty($cache);
-
-        $app = new Property('private', 'app', null);
-        $definition->addProperty($app);
+        $definition->addProperty(new Property('private', 'document', null));
+        $definition->addProperty(new Property('private', 'builder', null));
+        $definition->addProperty(new Property('protected', 'allowedKeys', null));
     }
 
-    private function getTargetClass()
+    private function addMethodsToDefinition(Definition $definition)
     {
-        return $this->getOption('namespace') .
-        '\\' .
-        self::CLASSES_NAMESPACE .
-        '\\' .
-        self::CLASSES_PREFIX;
-
+        $this->addConstructorToDefinition($definition);
+        $this->addBuildToDefinition($definition);
+        $this->addGetAppToDefinition($definition);
+        $this->addGetBuilderToDefinition($definition);
+        $this->addGetDocumentToDefinition($definition);
+        $this->addExtractBasicInfoToDefinition($definition);
+        $this->addSetDataToDefinition($definition);
+        $this->addSetLinksToDefinition($definition);
     }
 
-    private function getClassName()
+    private function addConstructorToDefinition(Definition $definition)
     {
-        $lastBackslashPosition = $this->getLastBackslashPosition();
-        return substr($this->class, $lastBackslashPosition + 1);
+        $method = new Method(
+            'public',
+            '__construct',
+            '\Silex\Application $app, \Level3\Hal\ResourceBuilder $builder, $document',
+<<<EOF
+        \$this->app = \$app;
+        \$this->document = \$document;
+        \$this->builder = \$builder;
+EOF
+        );
+
+        $definition->addMethod($method);
     }
 
-    private function getLastBackslashPosition()
+    private function addBuildToDefinition(Definition $definition)
     {
-        return strrpos($this->class, '\\');
+        $method = new Method(
+            'public',
+            'build',
+            null,
+<<<EOF
+        \$this->setData();
+        \$this->setLinks();
+
+        return \$this->builder->build();
+EOF
+        );
+
+        $definition->addMethod($method);
     }
 
-    private function getClassNamespace()
+    private function addGetAppToDefinition(Definition $definition)
     {
-        $lastBackslashPosition = $this->getLastBackslashPosition();
-        return substr($this->class, 0, $lastBackslashPosition);
+        $method = new Method(
+            'public',
+            'getApp',
+            null,
+<<<EOF
+        return \$this->app;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addGetBuilderToDefinition(Definition $definition)
+    {
+        $method = new Method(
+            'public',
+            'getBuilder',
+            null,
+<<<EOF
+        return \$this->builder;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addGetDocumentToDefinition(Definition $definition)
+    {
+        $method = new Method(
+            'public',
+            'getDocument',
+            null,
+<<<EOF
+        return \$this->document;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addExtractBasicInfoToDefinition(Definition $definition)
+    {
+        $method = new Method(
+            'protected',
+            'extractBasicInfo',
+            null,
+<<<EOF
+        \$data = array();
+        foreach (\$this->document->toArray() as \$key => \$value) {
+            if (in_array(\$key, \$this->allowedKeys)) {
+                \$data[\$key] = \$value;
+            }
+        }
+
+        return \$data;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addSetDataToDefinition(Definition $definition)
+    {
+        $method = new Method('protected', 'setData', null, null);
+        $method->setAbstract(true);
+        $definition->addMethod($method);
+    }
+
+
+    private function addSetLinksToDefinition(Definition $definition)
+    {
+        $method = new Method('protected', 'setLinks', null, null);
+        $method->setAbstract(true);
+        $definition->addMethod($method);
     }
 }
