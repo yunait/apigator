@@ -8,11 +8,11 @@ use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 use Mandango\Mondator\Extension;
 
-class EmptyResourceExtension extends ApigatorExtension
+class EmptyResourceBuilderExtension extends ApigatorExtension
 {
-    const CLASSES_NAMESPACE = 'Resources';
+    const CLASSES_NAMESPACE = 'Resources\\Builder';
     const CLASSES_PREFIX = '';
-    const CLASSES_SUFFIX = '';
+    const CLASSES_SUFFIX = 'Builder';
 
     public function __construct($options = array())
     {
@@ -29,7 +29,7 @@ class EmptyResourceExtension extends ApigatorExtension
         $targetClassName = $this->getTargetClass($this->getClassName());
         $definition = $this->definitionFactory->create($targetClassName, $output);
 
-        $this->definitions['emptyResource'] = $definition;
+        $this->definitions['emptyResourceBuilder'] = $definition;
         $definition->setParentClass($this->getParentClass($this->getClassName()));
     }
 
@@ -37,9 +37,10 @@ class EmptyResourceExtension extends ApigatorExtension
     {
         return '\\' . $this->getOption('namespace') .
         '\\' .
-        ResourceExtension::CLASSES_NAMESPACE .
+        ResourceBuilderExtension::CLASSES_NAMESPACE .
         '\\' .
-        ResourceExtension::CLASSES_PREFIX .
-        $class;
+        ResourceBuilderExtension::CLASSES_PREFIX .
+        $class .
+        ResourceBuilderExtension::CLASSES_SUFFIX;
     }
 }

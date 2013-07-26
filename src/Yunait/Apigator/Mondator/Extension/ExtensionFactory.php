@@ -28,4 +28,9 @@ class ExtensionFactory
     {
         return new ResourceBuilderExtension($options);
     }
+
+    public function createEmptyResourceBuilderExtension($options = array())
+    {
+        return new EmptyResourceBuilderExtension($options);
+    }
 }
