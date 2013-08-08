@@ -63,14 +63,18 @@ abstract class ApigatorExtension extends Extension
         $this->classesSuffix;
     }
 
-    protected function getClassName()
+    protected function getClassName($className = null)
     {
-        $lastBackslashPosition = $this->getLastBackslashPosition();
-        return substr($this->class, $lastBackslashPosition + 1);
+        if (!$className) {
+            $className = $this->class;
+        }
+
+        $lastBackslashPosition = $this->getLastBackslashPosition($className);
+        return substr($className, $lastBackslashPosition + 1);
     }
 
-    protected function getLastBackslashPosition()
+    protected function getLastBackslashPosition($className)
     {
-        return strrpos($this->class, '\\');
+        return strrpos($className, '\\');
     }
 }

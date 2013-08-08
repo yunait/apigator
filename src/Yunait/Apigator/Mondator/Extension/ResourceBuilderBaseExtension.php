@@ -11,8 +11,8 @@ use Mandango\Mondator\Extension;
 class ResourceBuilderBaseExtension extends ApigatorExtension
 {
     const CLASSES_NAMESPACE = 'Resources\\Base\\Builder';
-    const CLASSES_PREFIX = 'Base';
-    const CLASSES_SUFFIX = '';
+    const CLASSES_PREFIX = '';
+    const CLASSES_SUFFIX = 'ResourceBuilder';
 
     public function __construct($options = array())
     {
@@ -46,7 +46,6 @@ class ResourceBuilderBaseExtension extends ApigatorExtension
     {
         $this->addConstructorToDefinition($definition);
         $this->addBuildToDefinition($definition);
-        $this->addGetAppToDefinition($definition);
         $this->addGetBuilderToDefinition($definition);
         $this->addGetDocumentToDefinition($definition);
         $this->addExtractBasicInfoToDefinition($definition);
@@ -59,9 +58,8 @@ class ResourceBuilderBaseExtension extends ApigatorExtension
         $method = new Method(
             'public',
             '__construct',
-            '\Silex\Application $app, \Level3\Hal\ResourceBuilder $builder, $document',
+            '\Level3\Hal\ResourceBuilder $builder, $document',
 <<<EOF
-        \$this->app = \$app;
         \$this->document = \$document;
         \$this->builder = \$builder;
 EOF
@@ -81,20 +79,6 @@ EOF
         \$this->setLinks();
 
         return \$this->builder->build();
-EOF
-        );
-
-        $definition->addMethod($method);
-    }
-
-    private function addGetAppToDefinition(Definition $definition)
-    {
-        $method = new Method(
-            'public',
-            'getApp',
-            null,
-<<<EOF
-        return \$this->app;
 EOF
         );
 

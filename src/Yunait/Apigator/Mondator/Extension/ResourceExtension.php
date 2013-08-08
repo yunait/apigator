@@ -21,90 +21,45 @@ class ResourceExtension extends ApigatorExtension
         $this->classesNamespace = self::CLASSES_NAMESPACE;
         $this->classesPrefix = self::CLASSES_PREFIX;
         $this->classesSuffix = self::CLASSES_SUFFIX;
-        $this->setRepositoryNamePrefix($this->getOption('repositoryNamePrefix'));
-    }
-
-    private function setRepositoryNamePrefix($repositoryNamePrefix)
-    {
-        $this->repositoryNamePrefix = $repositoryNamePrefix;
-    }
-
-    protected function setup()
-    {
-        parent::setup();
-        $this->addRequiredOption('repositoryNamePrefix');
     }
 
     protected function generateClass()
     {
         $output = $this->outputFactory->create($this->getOption('output'), true);
-        print_r($this->configClass);
-        $targetClassName = $this->getTargetClassForClassname($this->getClassName());
+        $targetClassName = $this->getTargetClass($this->getClassName());
         $definition = $this->definitionFactory->create($targetClassName, $output);
 
         $this->definitions['resource'] = $definition;
         $definition->setAbstract(true);
-        $definition->AddInterface('\Level3\Repository\Finder');
-        $definition->addInterface('\Level3\Repository\Getter');
-        $definition->setParentClass('Base');
-        $this->addAttributesToDefinition($definition);
-        $this->addFindMethodToDefinition($definition);
-        $this->addGetMethodToDefinition($definition);
-        $this->addGetDocumentAsResource($definition);
+        $definition->setParentClass(BaseResourceExtension::CLASSES_PREFIX . BaseResourceExtension::CLASSES_SUFFIX);
+        $this->addConstructorToDefinition($definition);
+        $this->addGetDocumentAsResourceToDefinition($definition);
     }
 
-    private function getTargetClassForClassname($className)
+    private function addConstructorToDefinition(Definition $definition)
     {
-        return $this->getOption('namespace') .
-        '\\' .
-        self::CLASSES_NAMESPACE .
-        '\\' .
-        self::CLASSES_PREFIX .
-        $className .
-        self::CLASSES_SUFFIX;
-
-    }
-
-    private function addAttributesToDefinition(Definition $definition)
-    {
-        $property = new Property('protected', 'documentRepository', $this->repositoryNamePrefix . $this->configClass['collection']);
-        $definition->addProperty($property);
-    }
-
-    private function addFindMethodToDefinition(Definition $definition)
-    {
-        $method = new Method('public', 'find', '$lowerBound = 0, $upperBound = 0',
+        $collectionName = $this->configClass['collection'];
+        $method = new Method('public', '_construct', 'Level3\Hal\ResourceBuilderFactory $resourceBuilderFactory',
 <<<EOF
-        \$builder = \$this->createResourceBuilder();
-        foreach (\$this->retrieveCategoriesFromDatabase() as \$id => \$partner) {
-            \$builder->withEmbedded('categories', \$this->getKey(), \$id);
-        }
+        parent::__construct(\$resourceBuilderFactory);
+        \$this->collectionName = '$collectionName';
+EOF
+        );
+        $definition->addMethod($method);
+    }
 
+    private function addGetDocumentAsResourceToDefinition(Definition $definition)
+    {
+        $builderClass = '\\' . $this->getOption('namespace') . '\\' .
+            EmptyResourceBuilderExtension::CLASSES_NAMESPACE . '\\' .
+            EmptyResourceBuilderExtension::CLASSES_PREFIX .
+            $this->getClassName() .
+            EmptyResourceBuilderExtension::CLASSES_SUFFIX;
+
+        $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\Document $document',
+<<<EOF
+        \$builder = new $builderClass(\$this->createResourceBuilder(), \$document);
         return \$builder->build();
-EOF
-        );
-        $definition->addMethod($method);
-    }
-
-    private function addGetMethodToDefinition(Definition $definition)
-    {
-        $method = new Method('public', 'get', '$id',
-<<<EOF
-        \$document = \$this->getDocument(\$id);
-
-        return \$this->getDocumentAsResource(\$document);
-EOF
-        );
-        $definition->addMethod($method);
-    }
-
-    private function addGetDocumentAsResource(Definition $definition)
-    {
-        $method = new Method('private', 'getDocumentAsResource', '\\' . $this->class . ' $id',
-<<<EOF
-        \$document = \$this->getDocument(\$id);
-
-        return \$this->getDocumentAsResource(\$document);
 EOF
         );
         $definition->addMethod($method);

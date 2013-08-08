@@ -6,13 +6,12 @@ use Mandango\Mondator\Definition\Constant;
 use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
-use Mandango\Mondator\Extension;
 
 class BaseResourceExtension extends ApigatorExtension
 {
     const CLASSES_NAMESPACE = 'Resources\\Base';
-    const CLASSES_PREFIX = 'Base';
-    const CLASSES_SUFFIX = '';
+    const CLASSES_PREFIX = '';
+    const CLASSES_SUFFIX = 'Resource';
 
     public function __construct($options = array())
     {
@@ -31,15 +30,12 @@ class BaseResourceExtension extends ApigatorExtension
 
         $this->definitions['baseResource'] = $definition;
         $definition->setParentClass('\\Level3\\Repository');
+        $definition->addInterface('\\Level3\\Repository\\Getter');
+        $definition->addInterface('\\Level3\\Repository\\Finder');
         $definition->setAbstract(true);
         $this->addFieldsToDefinition($definition);
 
-        $definition->addMethod($this->createConstructorMethod());
-        $definition->addMethod($this->createGetAppMethod());
-        $definition->addMethod($this->createGetDocumentMethod());
-        $definition->addMethod($this->createGetDocumentRepositoryMethod());
-        $definition->addMethod($this->createConvertRangeToPageNumber());
-        $definition->addMethod($this->createConvertRangeToPageSize());
+        $this->addMethodsToDefinition($definition);
     }
 
     private function addFieldsToDefinition(Definition $definition)
@@ -47,79 +43,118 @@ class BaseResourceExtension extends ApigatorExtension
         $maxPageSize = new Constant('MAX_PAGE_SIZE', 100);
         $definition->addConstant($maxPageSize);
 
-        $cache = new Property('private', 'cache', null);
+        $cache = new Property('protected', 'documentRepository', null);
         $definition->addProperty($cache);
 
-        $app = new Property('private', 'app', null);
+        $app = new Property('protected', 'collectionName', null);
         $definition->addProperty($app);
     }
 
-    private function createConstructorMethod()
+    protected function addMethodsToDefinition($definition)
     {
-        $constructor = new Method('public', '__construct', 'Silex\\Application $app',
-<<<EOF
-        \$this->app = \$app;
-        \$this->cache = [];
-EOF
-        );
-        return $constructor;
+        $this->addSetDocumentRepositoryMethodToDefinition($definition);
+        $this->addFindMethodToDefinition($definition);
+        $this->addGetDocumentsFromDatabaseMethodToDefinition($definition);
+        $this->addLimitBoundsMethodToDefinition($definition);
+        $this->addGetMethodToDefinition($definition);
+        $this->addGetDocumentMethodToDefinition($definition);
+        $this->addGetDocumentAsResourceMethodToDefinition($definition);
     }
 
-    private function createGetAppMethod()
+    private function addSetDocumentRepositoryMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
-        $method = new Method('protected', 'getApp', '',
+        $method = new Method('public', 'setDocumentRepository', '$documentRepository',
 <<<EOF
-        return \$this->app;
+        \$this->documentRepository = \$documentRepository;
 EOF
         );
-        return $method;
+
+        $definition->addMethod($method);
     }
 
-    private function createGetDocumentMethod()
+    private function addFindMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('public', 'find', '$lowerBound, $upperBound, array $criteria',
+<<<EOF
+        \$builder = \$this->createResourceBuilder();
+        \$documents = \$this->getDocumentsFromDatabase(\$lowerBound, \$upperBound, \$criteria);
+
+        foreach (\$documents as \$id => \$document) {
+            \$builder->withEmbedded(\$this->collectionName, \$this->getKey(), \$id);
+        }
+
+        return \$builder->build();
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addGetDocumentsFromDatabaseMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('protected', 'getDocumentsFromDatabase', '$lowerBound, $upperBound, array $criteria',
+<<<EOF
+        \$bounds = \$this->limitBounds(\$lowerBound, \$upperBound);
+        \$query = \$this->documentRepository->createQuery(\$criteria);
+        \$query->skip(\$bounds[0])->limit(\$bounds[1]);
+        \$result = \$query->execute();
+        return \$result;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addLimitBoundsMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('private', 'limitBounds', '$lowerBound, $upperBound',
+<<<EOF
+        if (\$lowerBound === 0 && \$upperBound === 0) {
+            return array(0, self::MAX_PAGE_SIZE);
+        }
+
+        if (\$upperBound - \$lowerBound > self::MAX_PAGE_SIZE) {
+            return array(\$lowerBound, \$lowerBound + self::MAX_PAGE_SIZE);
+        }
+
+        return array(\$lowerBound, \$upperBound);
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addGetMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('public', 'get', '$id',
+<<<EOF
+        \$document = \$this->getDocument(\$id);
+        return \$this->getDocumentAsResource(\$document);
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addGetDocumentMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
         $method = new Method('protected', 'getDocument', '$id',
 <<<EOF
-        \$result = \$this->getDocumentepository()->getRepository()->findById([\$id]);
+        \$result = \$this->documentRepository->findById([\$id]);
         if (\$result) return end(\$result);
         return null;
 EOF
         );
-        return $method;
+
+        $definition->addMethod($method);
     }
 
-    private function createGetDocumentRepositoryMethod()
+    private function addGetDocumentAsResourceMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
-        $method = new Method('protected', 'getDocumentRepository', '',
-<<<EOF
-        return \$this->app['core']->get(\$this->documentRepository);
-EOF
-        );
-        return $method;
+        $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\Document $document', null);
+        $method->setAbstract(true);
+
+        $definition->addMethod($method);
     }
 
-    private function createConvertRangeToPageNumber()
-    {
-        $method = new Method('protected', 'convertRangeToPageNumber', '$lowerBound = 0, $upperBound = 0',
-<<<EOF
-        \$pageSize = \$this->convertRangeToPageSize(\$lowerBound, \$upperBound);
-
-        return intval(\$lowerBound/\$pageSize);
-EOF
-        );
-        return $method;
-    }
-
-    private function createConvertRangeToPageSize()
-    {
-        $method = new Method('protected', 'convertRangeToPageSize', '$lowerBound = 0, $upperBound = 0',
-<<<EOF
-        \$pageSize = \$upperBound - \$lowerBound;
-
-        if (\$pageSize > self::MAX_PAGE_SIZE) return self::MAX_PAGE_SIZE;
-        if (\$pageSize == 0) return self::MAX_PAGE_SIZE;
-        return \$pageSize;
-EOF
-        );
-        return $method;
-    }
 }

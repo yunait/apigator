@@ -25,7 +25,6 @@ class ResourceBuilderExtension extends ApigatorExtension
     protected function generateClass()
     {
         $output = $this->outputFactory->create($this->getOption('output'), true);
-        print_r($this->configClass);
         $targetClassName = $this->getTargetClass($this->getClassName());
         $definition = $this->definitionFactory->create($targetClassName, $output);
         $this->definitions['resourceBuilder'] = $definition;

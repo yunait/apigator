@@ -63,14 +63,13 @@ class Apigator
             'definitionFactory' => $this->definitionFactory
         );
 
-        $resourceOptions = array_merge($baseResourcesOptions, array('repositoryNamePrefix' => 'repository.daily.'));
-
-        $resourceExtension = $this->extensionFactory->createResourceExtension($resourceOptions);
+        $resourceExtension = $this->extensionFactory->createResourceExtension($baseResourcesOptions);
         $baseResourceExtension = $this->extensionFactory->createBaseResourceExtension($baseResourcesOptions);
         $emptyResourceExtension = $this->extensionFactory->createEmptyResourceExtension($baseResourcesOptions);
         $baseBuilderExtension = $this->extensionFactory->createResourceBuilderBaseExtension($baseResourcesOptions);
         $builderExtension = $this->extensionFactory->createResourceBuilderExtension($baseResourcesOptions);
         $emptyResourceBuilderExtension = $this->extensionFactory->createEmptyResourceBuilderExtension($baseResourcesOptions);
+        $documentRepositoryContainerExtension = $this->extensionFactory->createDocumentRepositoryContainer($baseResourcesOptions);
 
         $this->mondator->addExtension($resourceExtension);
         $this->mondator->addExtension($baseResourceExtension);
@@ -78,5 +77,6 @@ class Apigator
         $this->mondator->addExtension($baseBuilderExtension);
         $this->mondator->addExtension($builderExtension);
         $this->mondator->addExtension($emptyResourceBuilderExtension);
+        $this->mondator->addExtension($documentRepositoryContainerExtension);
     }
 }
