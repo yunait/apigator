@@ -29,8 +29,18 @@ class ResourceBuilderExtension extends ApigatorExtension
         $definition = $this->definitionFactory->create($targetClassName, $output);
         $this->definitions['resourceBuilder'] = $definition;
         $definition->setAbstract(true);
-        $definition->setParentClass('Base');
+        $definition->setParentClass($this->getParentClass());
         $this->addMethodsToDefinition($definition);
+    }
+
+    private function getParentClass()
+    {
+        return '\\' . $this->getOption('namespace') .
+        '\\' .
+        ResourceBuilderBaseExtension::CLASSES_NAMESPACE .
+        '\\' .
+        ResourceBuilderBaseExtension::CLASSES_PREFIX .
+        ResourceBuilderBaseExtension::CLASSES_SUFFIX;
     }
 
     private function addMethodsToDefinition(Definition $definition)
@@ -47,9 +57,9 @@ class ResourceBuilderExtension extends ApigatorExtension
         $method = new Method(
             'public',
             '__construct',
-            '\Silex\Application $app, \Level3\Hal\ResourceBuilder $builder, $document',
+            '\Level3\Hal\ResourceBuilder $builder, $document',
 <<<EOF
-        parent::__construct(\$app, \$builder, \$document);
+        parent::__construct(\$builder, \$document);
         \$this->initAllowedKeys();
 EOF
         );
@@ -137,7 +147,8 @@ EOF;
     {
         $code =
 <<<EOF
-        foreach (\$this->getDocument()->get%s() as \$relation) {
+        \$referenced = \$this->getDocument()->get%s();
+        if (\$referenced) {
             \$this->getBuilder()->withLinkToResource('%s',
                 '%s', (string) \$relation->getId(), \$relation->getName()
             );

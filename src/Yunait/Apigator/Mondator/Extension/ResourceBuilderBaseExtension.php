@@ -120,8 +120,9 @@ EOF
             'extractBasicInfo',
             null,
 <<<EOF
-        \$data = array();
-        foreach (\$this->document->toArray() as \$key => \$value) {
+        \$documentArray = \$this->document->toArray();
+        \$data = array('id' => \$documentArray['id']);
+        foreach (\$documentArray as \$key => \$value) {
             if (in_array(\$key, \$this->allowedKeys)) {
                 \$data[\$key] = \$value;
             }
