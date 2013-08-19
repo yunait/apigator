@@ -74,8 +74,10 @@ EOF
         \$this->allowedKeys = array (\n
 EOF;
 
-        foreach ($this->configClass['fields'] as $key => $value) {
-            $code = $code . '            \'' . $key . "',\n";
+        foreach ($this->configClass['fields'] as $fieldName => $fieldConfig) {
+            if (!isset($fieldConfig['hideFromApi']) || !$fieldConfig['hideFromApi']) {
+                $code = $code . '            \'' . $fieldName . "',\n";
+            }
         }
 
 
@@ -123,13 +125,16 @@ EOF;
 
         if (isset($this->configClass['referencesOne'])) {
             foreach ($this->configClass['referencesOne'] as $key => $value) {
-                $code = $code . $this->generateRelationsToOneLinksLoopBody($key);
+                $class = $value['class'];
+                $referencedResourceName = strtolower($this->getClassName($class));
+                $code = $code . $this->generateRelationsToOneLinksLoopBody($key, $referencedResourceName);
             }
         }
 
         if (isset($this->configClass['referencesMany'])){
             foreach ($this->configClass['referencesMany'] as $key => $value) {
-                $code = $code . $this->generateRelationsToManyLinksLoopBody($key);
+                $collectionName = strtolower($this->getClassName($value['class']));
+                $code = $code . $this->generateRelationsToManyLinksLoopBody($key, $collectionName);
             }
         }
 
@@ -143,36 +148,35 @@ EOF;
         $definition->addMethod($method);
     }
 
-    private function generateRelationsToOneLinksLoopBody($key)
+    private function generateRelationsToOneLinksLoopBody($key, $referencedResourceName)
     {
+
         $code =
 <<<EOF
         \$referenced = \$this->getDocument()->get%s();
         if (\$referenced) {
             \$this->getBuilder()->withLinkToResource('%s',
-                '%s', (string) \$relation->getId(), \$relation->getName()
+                '%s', (string) \$referenced->getId(), \$referenced->getId()
             );
         }\n
 EOF;
 
-        return sprintf($code, ucfirst($key), $key, $key);
+        return sprintf($code, ucfirst($key), $key, $referencedResourceName);
     }
 
-    private function generateRelationsToManyLinksLoopBody($key)
+    private function generateRelationsToManyLinksLoopBody($key, $collectionName)
     {
 
         $code =
 <<<EOF
-        foreach (\$this->getDocument()->get%s() as \$relationMany) {
-            foreach (\$relationMany as \$relation) {
-                \$this->getBuilder()->withLinkToResource('%s',
-                    '%s', (string) \$relation->getId(), \$relation->getName()
-                );
-            }
+        foreach (\$this->getDocument()->get%s() as \$relation) {
+            \$this->getBuilder()->withLinkToResource('%s',
+                '%s', (string) \$relation->getId(), \$relation->getId()
+            );
         }\n
 EOF;
 
-        return sprintf($code, ucfirst($key), $key, $key);
+        return sprintf($code, ucfirst($key), $key, $collectionName);
     }
 
     private function addMethodsForEmbeddedDocumentsToDefinition(Definition $definition)

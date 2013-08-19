@@ -12,7 +12,6 @@ class ResourceExtension extends ApigatorExtension
     const CLASSES_NAMESPACE = 'Resources\\Base';
     const CLASSES_PREFIX = '';
     const CLASSES_SUFFIX = '';
-    private $repositoryNamePrefix;
 
     public function __construct($options = array())
     {
@@ -34,12 +33,13 @@ class ResourceExtension extends ApigatorExtension
         $definition->setParentClass(BaseResourceExtension::CLASSES_PREFIX . BaseResourceExtension::CLASSES_SUFFIX);
         $this->addConstructorToDefinition($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
+        $this->addFilterCriteriaMethodToDefinition($definition);
     }
 
     private function addConstructorToDefinition(Definition $definition)
     {
         $collectionName = $this->configClass['collection'];
-        $method = new Method('public', '_construct', 'Level3\Hal\ResourceBuilderFactory $resourceBuilderFactory',
+        $method = new Method('public', '__construct', '\Level3\Hal\ResourceBuilderFactory $resourceBuilderFactory',
 <<<EOF
         parent::__construct(\$resourceBuilderFactory);
         \$this->collectionName = '$collectionName';
@@ -62,6 +62,30 @@ EOF
         return \$builder->build();
 EOF
         );
+        $definition->addMethod($method);
+    }
+
+    private function addFilterCriteriaMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $code = "        \$result = [];\n";
+        foreach($this->configClass['fields'] as $field => $fieldConfig) {
+            if (!isset($fieldConfig['findByMethod'])) {
+                continue;
+            }
+
+            $findByMethod = $fieldConfig['findByMethod'];
+
+            if ($fieldConfig['type'] === 'string') {
+                $code = $code . "        if (isset(\$criteria['$field'])) \$result['$findByMethod'] = (string) urldecode(\$criteria['$field']);\n";
+            }
+            if ($fieldConfig['type'] === 'integer') {
+                $code = $code . "        if (isset(\$criteria['$field'])) \$result['$findByMethod'] = (int) \$criteria['$field'];\n";
+            }
+        }
+        $code = $code . "        return \$result;";
+
+        $method = new Method('protected', 'filterCriteria', 'array $criteria', $code);
+
         $definition->addMethod($method);
     }
 }

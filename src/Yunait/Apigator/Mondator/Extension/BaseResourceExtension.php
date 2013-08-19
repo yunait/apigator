@@ -59,6 +59,7 @@ class BaseResourceExtension extends ApigatorExtension
         $this->addGetMethodToDefinition($definition);
         $this->addGetDocumentMethodToDefinition($definition);
         $this->addGetDocumentAsResourceMethodToDefinition($definition);
+        $this->addFilterCriteriaMethodToDefinition($definition);
     }
 
     private function addSetDocumentRepositoryMethodToDefinition(\Mandango\Mondator\Definition $definition)
@@ -76,6 +77,7 @@ EOF
     {
         $method = new Method('public', 'find', '$lowerBound, $upperBound, array $criteria',
 <<<EOF
+        \$criteria = \$this->filterCriteria(\$criteria);
         \$builder = \$this->createResourceBuilder();
         \$documents = \$this->getDocumentsFromDatabase(\$lowerBound, \$upperBound, \$criteria);
 
@@ -95,8 +97,13 @@ EOF
         $method = new Method('protected', 'getDocumentsFromDatabase', '$lowerBound, $upperBound, array $criteria',
 <<<EOF
         \$bounds = \$this->limitBounds(\$lowerBound, \$upperBound);
-        \$query = \$this->documentRepository->createQuery(\$criteria);
-        \$query->skip(\$bounds[0])->limit(\$bounds[1]);
+        \$query = \$this->documentRepository->createQuery();
+
+        foreach (\$criteria as \$criteriaMethod => \$criteriaValue) {
+            \$query->\$criteriaMethod(\$criteriaValue);
+        }
+
+        \$query->skip(\$bounds[0])->limit(\$bounds[1]+1);
         \$result = \$query->execute();
         return \$result;
 EOF
@@ -152,6 +159,14 @@ EOF
     private function addGetDocumentAsResourceMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
         $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\Document $document', null);
+        $method->setAbstract(true);
+
+        $definition->addMethod($method);
+    }
+
+    private function addFilterCriteriaMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('protected', 'filterCriteria', 'array $criteria', null);
         $method->setAbstract(true);
 
         $definition->addMethod($method);
