@@ -59,7 +59,7 @@ class BaseResourceExtension extends ApigatorExtension
         $this->addGetMethodToDefinition($definition);
         $this->addGetDocumentMethodToDefinition($definition);
         $this->addGetDocumentAsResourceMethodToDefinition($definition);
-        $this->addFilterCriteriaMethodToDefinition($definition);
+        $this->addParseCriteriaTypesMethodToDefinition($definition);
     }
 
     private function addSetDocumentRepositoryMethodToDefinition(\Mandango\Mondator\Definition $definition)
@@ -77,7 +77,7 @@ EOF
     {
         $method = new Method('public', 'find', '$lowerBound, $upperBound, array $criteria',
 <<<EOF
-        \$criteria = \$this->filterCriteria(\$criteria);
+        \$criteria = \$this->parseCriteriaTypes(\$criteria);
         \$builder = \$this->createResourceBuilder();
         \$documents = \$this->getDocumentsFromDatabase(\$lowerBound, \$upperBound, \$criteria);
 
@@ -99,11 +99,14 @@ EOF
         \$bounds = \$this->limitBounds(\$lowerBound, \$upperBound);
         \$query = \$this->documentRepository->createQuery();
 
-        foreach (\$criteria as \$criteriaMethod => \$criteriaValue) {
-            \$query->\$criteriaMethod(\$criteriaValue);
+        foreach (\$criteria as \$key => \$value) {
+            \$queryMethodName = sprintf('findBy%s', ucfirst(\$key));
+            if (method_exists(\$query, \$queryMethodName)) {
+                \$query->\$queryMethodName(\$value);
+            }
         }
 
-        \$query->skip(\$bounds[0])->limit(\$bounds[1]+1);
+        \$query->skip(\$bounds[0])->limit(\$bounds[1]);
         \$result = \$query->execute();
         return \$result;
 EOF
@@ -124,7 +127,7 @@ EOF
             return array(\$lowerBound, \$lowerBound + self::MAX_PAGE_SIZE);
         }
 
-        return array(\$lowerBound, \$upperBound);
+        return array(\$lowerBound, \$upperBound - \$lowerBound +1);
 EOF
         );
 
@@ -164,12 +167,11 @@ EOF
         $definition->addMethod($method);
     }
 
-    private function addFilterCriteriaMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    private function addParseCriteriaTypesMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
-        $method = new Method('protected', 'filterCriteria', 'array $criteria', null);
+        $method = new Method('protected', 'parseCriteriaTypes', 'array $criteria', null);
         $method->setAbstract(true);
 
         $definition->addMethod($method);
     }
-
 }

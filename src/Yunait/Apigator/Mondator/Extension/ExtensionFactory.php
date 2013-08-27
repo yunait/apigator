@@ -34,8 +34,13 @@ class ExtensionFactory
         return new EmptyResourceBuilderExtension($options);
     }
 
-    public function createDocumentRepositoryContainer($options = array())
+    public function createBaseDocumentRepositoryContainer($options = array())
     {
-        return new DocumentRepositoryContainer($options);
+        return new BaseDocumentRepositoryContainer($options);
+    }
+
+    public function createEmptyDocumentRepositoryContainer($options = array())
+    {
+        return new EmptyDocumentRepositoryContainer($options);
     }
 }

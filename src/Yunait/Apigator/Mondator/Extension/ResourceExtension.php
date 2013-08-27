@@ -33,7 +33,7 @@ class ResourceExtension extends ApigatorExtension
         $definition->setParentClass(BaseResourceExtension::CLASSES_PREFIX . BaseResourceExtension::CLASSES_SUFFIX);
         $this->addConstructorToDefinition($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
-        $this->addFilterCriteriaMethodToDefinition($definition);
+        $this->addParseCriteriaTypesMethodToDefinition($definition);
     }
 
     private function addConstructorToDefinition(Definition $definition)
@@ -65,6 +65,25 @@ EOF
         $definition->addMethod($method);
     }
 
+    private function addParseCriteriaTypesMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $code = '';
+        foreach($this->configClass['fields'] as $field => $fieldConfig) {
+
+            if ($fieldConfig['type'] === 'string') {
+                $code = $code . "        if (isset(\$criteria['$field'])) \$criteria['$field'] = (string) urldecode(\$criteria['$field']);\n";
+            }
+            if ($fieldConfig['type'] === 'integer') {
+                $code = $code . "        if (isset(\$criteria['$field'])) \$criteria['$field'] = (int) \$criteria['$field'];\n";
+            }
+        }
+        $code = $code . "        return \$criteria;";
+
+        $method = new Method('protected', 'parseCriteriaTypes', 'array $criteria', $code);
+
+        $definition->addMethod($method);
+    }
+
     private function addFilterCriteriaMethodToDefinition(\Mandango\Mondator\Definition $definition)
     {
         $code = "        \$result = [];\n";
@@ -83,6 +102,8 @@ EOF
             }
         }
         $code = $code . "        return \$result;";
+
+        print_r($this->configClasses);die;
 
         $method = new Method('protected', 'filterCriteria', 'array $criteria', $code);
 

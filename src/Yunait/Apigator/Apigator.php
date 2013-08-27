@@ -69,7 +69,8 @@ class Apigator
         $baseBuilderExtension = $this->extensionFactory->createResourceBuilderBaseExtension($baseResourcesOptions);
         $builderExtension = $this->extensionFactory->createResourceBuilderExtension($baseResourcesOptions);
         $emptyResourceBuilderExtension = $this->extensionFactory->createEmptyResourceBuilderExtension($baseResourcesOptions);
-        $documentRepositoryContainerExtension = $this->extensionFactory->createDocumentRepositoryContainer($baseResourcesOptions);
+        $documentRepositoryContainerExtension = $this->extensionFactory->createBaseDocumentRepositoryContainer($baseResourcesOptions);
+        $emptyDocumentRepositoryContainerExtension = $this->extensionFactory->createEmptyDocumentRepositoryContainer($baseResourcesOptions);
 
         $this->mondator->addExtension($resourceExtension);
         $this->mondator->addExtension($baseResourceExtension);
@@ -78,5 +79,6 @@ class Apigator
         $this->mondator->addExtension($builderExtension);
         $this->mondator->addExtension($emptyResourceBuilderExtension);
         $this->mondator->addExtension($documentRepositoryContainerExtension);
+        $this->mondator->addExtension($emptyDocumentRepositoryContainerExtension);
     }
 }
