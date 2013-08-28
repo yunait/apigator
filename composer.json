@@ -11,11 +11,14 @@
     "require": {
         "php": ">=5.3.0",
         "yunait/level3": "*",
-        "mongator/mongator": "v1.2.1"
+        "mongator/mongator": ">=v1.3.0",
+        "mongator/mondator": ">=1.0.0",
+	"cilex/console-service-provider ": "*"
     },
     "autoload": {
         "psr-0": {
-            "Yunait\\Apigator": "src/"
+            "Core\\Commands\\API": "src/",
+            "API": "src/"
         }
     }
 }
