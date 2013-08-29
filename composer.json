@@ -19,6 +19,7 @@
         "psr-0": {
             "Core\\Commands\\API": "src/",
             "API": "src/"
+            "Yunait\\Apigator": "src/"
         }
     }
 }
