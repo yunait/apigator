@@ -13,7 +13,7 @@
         "yunait/level3": "*",
         "mongator/mongator": ">=v1.3.0",
         "mongator/mondator": ">=1.0.0",
-	"cilex/console-service-provider ": "*"
+        "cilex/console-service-provider": "*"
     },
     "autoload": {
         "psr-0": {
