@@ -32,6 +32,9 @@ class BaseResourceExtension extends ApigatorExtension
         $definition->setParentClass('\\Level3\\Repository');
         $definition->addInterface('\\Level3\\Repository\\Getter');
         $definition->addInterface('\\Level3\\Repository\\Finder');
+        $definition->addInterface('\\Level3\\Repository\\Putter');
+        $definition->addInterface('\\Level3\\Repository\\Poster');
+        $definition->addInterface('\\Level3\\Repository\\Deleter');
         $definition->setAbstract(true);
         $this->addFieldsToDefinition($definition);
 
@@ -57,6 +60,9 @@ class BaseResourceExtension extends ApigatorExtension
         $this->addGetDocumentsFromDatabaseMethodToDefinition($definition);
         $this->addLimitBoundsMethodToDefinition($definition);
         $this->addGetMethodToDefinition($definition);
+        $this->addPutMethodToDefinition($definition);
+        $this->addPostMethodToDefinition($definition);
+        $this->addDeleteMethodToDefinition($definition);
         $this->addGetDocumentMethodToDefinition($definition);
         $this->addGetDocumentAsResourceMethodToDefinition($definition);
         $this->addParseCriteriaTypesMethodToDefinition($definition);
@@ -171,6 +177,44 @@ EOF
     {
         $method = new Method('protected', 'parseCriteriaTypes', 'array $criteria', null);
         $method->setAbstract(true);
+
+        $definition->addMethod($method);
+    }
+
+    private function addPutMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('public', 'put', '$data',
+<<<EOF
+        \$document = \$this->documentRepository->create(\$data);
+        \$this->documentRepository->save(\$document);
+        return \$document;
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addPostMethodToDefinition(\Mandango\Mondator\Definition $definition)
+    {
+        $method = new Method('public', 'post', '$id, $data',
+<<<EOF
+        die("Posting data to \$id");
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+    private function addDeleteMethodToDefinition(\Mandango\Mondator\Definition $definition){
+        $method = new Method('public', 'delete', '$data',
+<<<EOF
+        \$document = \$this->documentRepository->findById(array(\$id));
+        if (!\$document) {
+            throw new \Level3\Exceptions\NotFound();
+        }
+        \$this->documentRepository->delete(\$document);
+EOF
+        );
 
         $definition->addMethod($method);
     }
