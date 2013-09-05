@@ -4,42 +4,50 @@ namespace Yunait\Apigator\Mondator\Extension;
 
 class ExtensionFactory
 {
-    public function createResourceExtension($options = array())
+    public function createExtensions($options = array())
+    {
+        return array(
+            $this->createResourceExtension($options),
+            $this->createEmptyResourceExtension($options),
+            $this->createResourceBuilderBaseExtension($options),
+            $this->createResourceBuilderExtension($options),
+            $this->createEmptyResourceBuilderExtension($options),
+            $this->createBaseDocumentRepositoryContainer($options),
+            $this->createEmptyDocumentRepositoryContainer($options),
+        );
+    }
+
+    protected function createResourceExtension($options = array())
     {
         return new ResourceExtension($options);
     }
 
-    public function createBaseResourceExtension($options = array())
-    {
-        return new BaseResourceExtension($options);
-    }
-
-    public function createEmptyResourceExtension($options = array())
+    protected function createEmptyResourceExtension($options = array())
     {
         return new EmptyResourceExtension($options);
     }
 
-    public function createResourceBuilderBaseExtension($options = array())
+    protected function createResourceBuilderBaseExtension($options = array())
     {
         return new ResourceBuilderBaseExtension($options);
     }
 
-    public function createResourceBuilderExtension($options = array())
+    protected function createResourceBuilderExtension($options = array())
     {
         return new ResourceBuilderExtension($options);
     }
 
-    public function createEmptyResourceBuilderExtension($options = array())
+    protected function createEmptyResourceBuilderExtension($options = array())
     {
         return new EmptyResourceBuilderExtension($options);
     }
 
-    public function createBaseDocumentRepositoryContainer($options = array())
+    protected function createBaseDocumentRepositoryContainer($options = array())
     {
         return new BaseDocumentRepositoryContainer($options);
     }
 
-    public function createEmptyDocumentRepositoryContainer($options = array())
+    protected function createEmptyDocumentRepositoryContainer($options = array())
     {
         return new EmptyDocumentRepositoryContainer($options);
     }
