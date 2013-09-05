@@ -30,7 +30,7 @@ class ResourceExtension extends ApigatorExtension
 
         $this->definitions['resource'] = $definition;
         $definition->setAbstract(true);
-        $definition->setParentClass(BaseResourceExtension::CLASSES_PREFIX . BaseResourceExtension::CLASSES_SUFFIX);
+        $definition->setParentClass('\Yunait\Apigator\Resources\Resource');
         $this->addConstructorToDefinition($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
         $this->addParseCriteriaTypesMethodToDefinition($definition);
