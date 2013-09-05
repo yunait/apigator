@@ -2,6 +2,8 @@
 
 namespace Yunait\Apigator\Resources;
 
+use Mongator\Query\Chunk;
+
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
     const MAX_PAGE_SIZE = 100;
@@ -14,11 +16,11 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         $this->documentRepository = $documentRepository;
     }
 
-    public function find($lowerBound, $upperBound, array $criteria)
+    public function find($sort, $lowerBound, $upperBound, array $criteria)
     {
         $criteria = $this->parseCriteriaTypes($criteria);
         $builder = $this->createResourceBuilder();
-        $documents = $this->getDocumentsFromDatabase($lowerBound, $upperBound, $criteria);
+        $documents = $this->getDocumentsFromDatabase($sort, $lowerBound, $upperBound, $criteria);
 
         foreach ($documents as $id => $document) {
             $builder->withEmbedded($this->collectionName, $this->getKey(), $id);
@@ -27,7 +29,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         return $builder->build();
     }
 
-    protected function getDocumentsFromDatabase($lowerBound, $upperBound, array $criteria)
+    protected function getDocumentsFromDatabase($sort, $lowerBound, $upperBound, array $criteria)
     {
         $query = $this->documentRepository->createQuery();
 
@@ -38,34 +40,27 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
             }
         }
 
-        $bounds = $this->limitBounds($lowerBound, $upperBound);
-        $query = $this->applyOffsetAndLimitToQuery($query, $bounds[0], $bounds[1]);
-        $result = $this->extractResultFromQuery($query);
+        list($page, $pageSize) = $this->boundsToPageAndPageSize($lowerBound, $upperBound);
+        $chunk = $this->getChunk($sort, $page, $pageSize);
+        $result = $chunk->getResult($query);
         return $result;
     }
 
-    private function limitBounds($lowerBound, $upperBound)
+    private function boundsToPageAndPageSize($lowerBound, $upperBound)
     {
-        if ($lowerBound === 0 && $upperBound === 0) {
-            return array(0, self::MAX_PAGE_SIZE);
+        if ($upperBound == 0) {
+            $pageSize = self::MAX_PAGE_SIZE;
+        } else {
+            $pageSize = min($upperBound - $lowerBound, self::MAX_PAGE_SIZE);
         }
 
-        if ($upperBound - $lowerBound > self::MAX_PAGE_SIZE) {
-            return array($lowerBound, $lowerBound + self::MAX_PAGE_SIZE);
-        }
-
-        return array($lowerBound, $upperBound - $lowerBound +1);
+        $page = $lowerBound / $pageSize;
+        return array($page, $pageSize);
     }
 
-    protected function applyOffsetAndLimitToQuery($query, $offset, $limit)
+    protected function getChunk($sort, $page, $pageSize)
     {
-        $query->skip($offset)->limit($limit);
-        return $query;
-    }
-
-    protected function extractResultFromQuery($query)
-    {
-        return $query->execute();
+        return (new Chunk())->set($sort, $page, $pageSize);
     }
 
     public function get($id)
