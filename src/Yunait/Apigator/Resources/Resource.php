@@ -3,6 +3,8 @@
 namespace Yunait\Apigator\Resources;
 
 use Mongator\Query\Chunk;
+use Mongator\Document\Document;
+use Level3\Exceptions;
 
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
@@ -71,21 +73,29 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
 
     public function put($data)
     {
-        $document = $this->documentRepository->create($data);
-        $this->documentRepository->save($document);
-        return $document;
+        $document = $this->documentRepository->create();
+        $document->fromArray($data);
+        $document->save();
+
+        return $this->getDocumentAsResource($document);
     }
 
     public function post($id, $data)
     {
-        die("Posting data to $id");
+        $document = $this->getDocument($id);
+        unset($data['id']);
+        
+        $document->fromArray($data);
+        $document->save();
+        
+        return $this->getDocumentAsResource($document);
     }
 
     public function delete($data)
     {
         $document = $this->documentRepository->findById(array($id));
         if (!$document) {
-            throw new \Level3\Exceptions\NotFound();
+            throw new Exceptions\NotFound();
         }
         $this->documentRepository->delete($document);
     }
@@ -93,11 +103,14 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
     protected function getDocument($id)
     {
         $result = $this->documentRepository->findById([$id]);
-        if ($result) return end($result);
-        return null;
+        if ($result) {
+            return end($result);
+        } else {
+            throw new Exceptions\NotFound();
+        }
     }
 
-    abstract protected function getDocumentAsResource(\Mongator\Document\Document $document);
+    abstract protected function getDocumentAsResource(Document $document);
 
     abstract protected function parseCriteriaTypes(array $criteria);
 }
