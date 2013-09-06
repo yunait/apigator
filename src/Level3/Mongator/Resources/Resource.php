@@ -3,8 +3,9 @@
 namespace Level3\Mongator\Resources;
 
 use Mongator\Query\Chunk;
-use Mongator\Document\Document;
+use Mongator\Document\AbstractDocument;
 use Level3\Exceptions;
+use stdClass;
 
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
@@ -16,6 +17,11 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
     public function setDocumentRepository($documentRepository)
     {
         $this->documentRepository = $documentRepository;
+    }
+
+    public function getDocumentRepository()
+    {
+        return $this->documentRepository;
     }
 
     public function find($sort, $lowerBound, $upperBound, array $criteria)
@@ -75,7 +81,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
     {
         $document = $this->documentRepository->create();
         $document->fromArray($data);
-        $document->save();
+        $this->persistsDocument($document);
 
         return $this->getDocumentAsResource($document);
     }
@@ -86,23 +92,20 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         unset($data['id']);
         
         $document->fromArray($data);
-        $document->save();
+        $this->persistsDocument($document);
         
         return $this->getDocumentAsResource($document);
     }
 
     public function delete($data)
     {
-        $document = $this->documentRepository->findById(array($id));
-        if (!$document) {
-            throw new Exceptions\NotFound();
-        }
-        $this->documentRepository->delete($document);
+        $document = $this->getDocument($id);
+        $this->deleteDocument($document);
     }
 
-    protected function getDocument($id)
+    protected function getDocument(stdClass $parameters)
     {
-        $result = $this->documentRepository->findById([$id]);
+        $result = $this->documentRepository->findById([$parameters->id]);
         if ($result) {
             return end($result);
         } else {
@@ -110,7 +113,17 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         }
     }
 
-    abstract protected function getDocumentAsResource(Document $document);
+    protected function persistsDocument(AbstractDocument $document)
+    {
+        $document->save();
+    }
+
+    protected function deleteDocument(AbstractDocument $document)
+    {
+        $this->documentRepository->delete($document);
+    }
+
+    abstract protected function getDocumentAsResource(AbstractDocument $document);
 
     abstract protected function parseCriteriaTypes(array $criteria);
 }
