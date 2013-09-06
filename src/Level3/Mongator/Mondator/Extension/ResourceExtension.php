@@ -1,6 +1,6 @@
 <?php
 
-namespace Yunait\Apigator\Mondator\Extension;
+namespace Level3\Mongator\Mondator\Extension;
 
 use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
@@ -30,7 +30,7 @@ class ResourceExtension extends ApigatorExtension
 
         $this->definitions['resource'] = $definition;
         $definition->setAbstract(true);
-        $definition->setParentClass('\Yunait\Apigator\Resources\Resource');
+        $definition->setParentClass('\Level3\Mongator\Resources\Resource');
         $this->addConstructorToDefinition($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
         $this->addParseCriteriaTypesMethodToDefinition($definition);

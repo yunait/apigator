@@ -1,15 +1,15 @@
 <?php
 
-namespace Yunait\Apigator;
+namespace Level3\Mongator;
 
 use Mandango\Mondator\Extension;
 use Mandango\Mondator\Mondator;
 use Mongator\Mongator;
-use Yunait\Apigator\Mondator\Definition\DefinitionFactory;
-use Yunait\Apigator\Mondator\Extension\ExtensionFactory;
-use Yunait\Apigator\Mondator\OutputFactory;
+use Level3\Mongator\Mondator\Definition\DefinitionFactory;
+use Level3\Mongator\Mondator\Extension\ExtensionFactory;
+use Level3\Mongator\Mondator\OutputFactory;
 
-class Apigator
+class Generator
 {
     private $mongator;
     private $mondator;

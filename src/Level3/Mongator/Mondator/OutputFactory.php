@@ -1,6 +1,6 @@
 <?php
 
-namespace Yunait\Apigator\Mondator;
+namespace Level3\Mongator\Mondator;
 
 use Mandango\Mondator\Output;
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace Yunait\Apigator\Mondator\Extension;
+namespace Level3\Mongator\Mondator\Extension;
 
 use Mandango\Mondator\Extension;
-use Yunait\Apigator\Mondator\Definition\DefinitionFactory;
-use Yunait\Apigator\Mondator\OutputFactory;
+use Level3\Mongator\Mondator\Definition\DefinitionFactory;
+use Level3\Mongator\Mondator\OutputFactory;
 
 abstract class ApigatorExtension extends Extension
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Yunait\Apigator\Mondator\Extension;
+namespace Level3\Mongator\Mondator\Extension;
 
 class ExtensionFactory
 {

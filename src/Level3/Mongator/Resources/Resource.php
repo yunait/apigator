@@ -1,6 +1,6 @@
 <?php
 
-namespace Yunait\Apigator\Resources;
+namespace Level3\Mongator\Resources;
 
 use Mongator\Query\Chunk;
 use Mongator\Document\Document;
