@@ -29,11 +29,15 @@ class EmptyResourceExtension extends Extension
         $definition = $this->definitionFactory->create($targetClassName, $output);
 
         $this->definitions['emptyResource'] = $definition;
+
+                var_dump($this->getParentClass($this->getClassName()));
+
         $definition->setParentClass($this->getParentClass($this->getClassName()));
     }
 
     private function getParentClass($class)
     {
+
         return '\\' . $this->getOption('namespace') .
         '\\' .
         ResourceExtension::CLASSES_NAMESPACE .

@@ -29,6 +29,7 @@ class EmptyDocumentRepositoryContainer extends Extension
         $definition = $this->definitionFactory->create($targetClassName, $output);
 
         $this->definitions['emptyDocumentRepositoryContainer'] = $definition;
+        
         $definition->setParentClass('\\' . $this->getOption('namespace') .
             '\\' .BaseDocumentRepositoryContainer::CLASSES_NAMESPACE.'\\'.BaseDocumentRepositoryContainer::CLASSES_SUFFIX);
     }

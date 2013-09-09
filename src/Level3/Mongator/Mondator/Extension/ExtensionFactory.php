@@ -12,9 +12,6 @@ class ExtensionFactory
             $this->createResourceBuilderBaseExtension($options),
             $this->createResourceBuilderExtension($options),
             $this->createEmptyResourceBuilderExtension($options),
-            $this->createBaseDocumentRepositoryContainer($options),
-            $this->createEmptyDocumentRepositoryContainer($options),
-            $this->createEmbeddedResourceExtension($options)
         );
     }
 
@@ -42,20 +39,4 @@ class ExtensionFactory
     {
         return new EmptyResourceBuilderExtension($options);
     }
-
-    protected function createBaseDocumentRepositoryContainer($options = array())
-    {
-        return new BaseDocumentRepositoryContainer($options);
-    }
-
-    protected function createEmptyDocumentRepositoryContainer($options = array())
-    {
-        return new EmptyDocumentRepositoryContainer($options);
-    }
-
-    protected function createEmbeddedResourceExtension($options = array())
-    {
-        return new EmbeddedResourceExtension($options);
-    }
-
 }
