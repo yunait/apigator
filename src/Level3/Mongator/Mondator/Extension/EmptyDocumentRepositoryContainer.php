@@ -7,7 +7,7 @@ use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 
-class EmptyDocumentRepositoryContainer extends ApigatorExtension
+class EmptyDocumentRepositoryContainer extends Extension
 {
     const CLASSES_NAMESPACE = 'RepositoryMapping';
     const CLASSES_PREFIX = '';

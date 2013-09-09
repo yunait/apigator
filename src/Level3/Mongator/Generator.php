@@ -38,12 +38,12 @@ class Generator
         $this->definitionFactory = $definitionFactory;
     }
 
-    public function generateApi($rootPath, $rootNamespace)
+    public function generateApi($rootPath, $rootNamespace, $modelBaseNamespace)
     {
         echo("Generating API for $rootNamespace under $rootPath\n");
         $classes = $this->mongator->getMetadataFactory()->getClasses();
         $this->setMondatorConfig($classes);
-        $this->addMondatorExtensions($rootPath, $rootNamespace);
+        $this->addMondatorExtensions($rootPath, $rootNamespace, $modelBaseNamespace);
         $this->mondator->process();
     }
 
@@ -54,13 +54,14 @@ class Generator
         }
     }
 
-    private function addMondatorExtensions($rootPath, $rootNamespace)
+    private function addMondatorExtensions($rootPath, $rootNamespace, $modelBaseNamespace)
     {
         $baseResourcesOptions = array(
             'output' => $rootPath,
             'namespace' => $rootNamespace,
+            'baseModelsNamespace' => $modelBaseNamespace,
             'outputFactory' => $this->outputFactory,
-            'definitionFactory' => $this->definitionFactory
+            'definitionFactory' => $this->definitionFactory,
         );
 
         $extensions = $this->extensionFactory->createExtensions($baseResourcesOptions);

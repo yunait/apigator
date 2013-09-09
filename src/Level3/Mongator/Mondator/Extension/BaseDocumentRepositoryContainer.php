@@ -7,7 +7,7 @@ use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 
-class BaseDocumentRepositoryContainer extends ApigatorExtension
+class BaseDocumentRepositoryContainer extends Extension
 {
     const CLASSES_NAMESPACE = 'RepositoryMapping\Base';
     const CLASSES_PREFIX = '';
@@ -60,9 +60,6 @@ class BaseDocumentRepositoryContainer extends ApigatorExtension
         $code = $code . "        \$this->documentRepositoryMapping = array(\n";
 
         foreach ($this->configClasses as $class => $config) {
-            if ($config['isEmbedded']) {
-                continue;
-            }
             $code = $code .'            ' .
                 '\'' . $this->getOption('namespace') . '\\' . EmptyResourceExtension::CLASSES_NAMESPACE . '\\' . $this->getClassName($class) . '\' => ' .
                 '\'' . $class . "',\n";

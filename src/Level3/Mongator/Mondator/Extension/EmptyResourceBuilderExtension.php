@@ -6,9 +6,8 @@ use Mandango\Mondator\Definition\Constant;
 use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
-use Mandango\Mondator\Extension;
 
-class EmptyResourceBuilderExtension extends ApigatorExtension
+class EmptyResourceBuilderExtension extends Extension
 {
     const CLASSES_NAMESPACE = 'Resources\\Builder';
     const CLASSES_PREFIX = '';

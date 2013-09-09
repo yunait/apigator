@@ -5,9 +5,8 @@ namespace Level3\Mongator\Mondator\Extension;
 use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
-use Mandango\Mondator\Extension;
 
-class ResourceExtension extends ApigatorExtension
+class ResourceExtension extends Extension
 {
     const CLASSES_NAMESPACE = 'Resources\\Base';
     const CLASSES_PREFIX = '';
@@ -30,22 +29,19 @@ class ResourceExtension extends ApigatorExtension
 
         $this->definitions['resource'] = $definition;
         $definition->setAbstract(true);
-        $definition->setParentClass('\Level3\Mongator\Resources\Resource');
-        $this->addConstructorToDefinition($definition);
+
+        $this->setParentClass($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
         $this->addParseCriteriaTypesMethodToDefinition($definition);
     }
 
-    private function addConstructorToDefinition(Definition $definition)
+    private function setParentClass(Definition $definition)
     {
-        $collectionName = $this->configClass['collection'];
-        $method = new Method('public', '__construct', '\Level3\Hal\ResourceBuilderFactory $resourceBuilderFactory',
-<<<EOF
-        parent::__construct(\$resourceBuilderFactory);
-        \$this->collectionName = '$collectionName';
-EOF
-        );
-        $definition->addMethod($method);
+        if ($this->configClass['isEmbedded']) {
+            $definition->setParentClass('\Level3\Mongator\Resources\EmbeddedResource');
+        } else {
+            $definition->setParentClass('\Level3\Mongator\Resources\Resource');
+        }
     }
 
     private function addGetDocumentAsResourceToDefinition(Definition $definition)
@@ -56,7 +52,7 @@ EOF
             $this->getClassName() .
             EmptyResourceBuilderExtension::CLASSES_SUFFIX;
 
-        $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\Document $document',
+        $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\AbstractDocument $document',
 <<<EOF
         \$builder = new $builderClass(\$this->createResourceBuilder(), \$document);
         return \$builder->build();

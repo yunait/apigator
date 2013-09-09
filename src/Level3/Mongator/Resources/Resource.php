@@ -10,9 +10,9 @@ use stdClass;
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
     const MAX_PAGE_SIZE = 100;
-
+    const FIND_EMBEDDED_KEY = 'documents';
+    
     protected $documentRepository;
-    protected $collectionName;
 
     public function setDocumentRepository($documentRepository)
     {
@@ -31,10 +31,15 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         $documents = $this->getDocumentsFromDatabase($sort, $lowerBound, $upperBound, $criteria);
 
         foreach ($documents as $id => $document) {
-            $builder->withEmbedded($this->collectionName, $this->getKey(), $id);
+            $builder->withEmbedded($this->getRelationsName(), $this->getKey(), (object) ['id' => $id]);
         }
 
         return $builder->build();
+    }
+
+    protected function getRelationsName()
+    {
+        return self::FIND_EMBEDDED_KEY;
     }
 
     protected function getDocumentsFromDatabase($sort, $lowerBound, $upperBound, array $criteria)

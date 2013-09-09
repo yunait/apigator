@@ -2,11 +2,11 @@
 
 namespace Level3\Mongator\Mondator\Extension;
 
-use Mandango\Mondator\Extension;
+use Mandango\Mondator\Extension as BaseExtension;
 use Level3\Mongator\Mondator\Definition\DefinitionFactory;
 use Level3\Mongator\Mondator\OutputFactory;
 
-abstract class ApigatorExtension extends Extension
+abstract class Extension extends BaseExtension
 {
     protected $outputFactory;
     protected $definitionFactory;
@@ -39,14 +39,11 @@ abstract class ApigatorExtension extends Extension
         $this->addRequiredOption('namespace');
         $this->addRequiredOption('outputFactory');
         $this->addRequiredOption('definitionFactory');
+        $this->addRequiredOption('baseModelsNamespace');
     }
 
     protected function doClassProcess()
     {
-        if ($this->configClass['isEmbedded']) {
-            return;
-        }
-
         $this->generateClass();
     }
 
@@ -69,8 +66,7 @@ abstract class ApigatorExtension extends Extension
             $className = $this->class;
         }
 
-        $lastBackslashPosition = $this->getLastBackslashPosition($className);
-        return substr($className, $lastBackslashPosition + 1);
+        return str_replace($this->getOption('baseModelsNamespace'), '', $className);
     }
 
     protected function getLastBackslashPosition($className)

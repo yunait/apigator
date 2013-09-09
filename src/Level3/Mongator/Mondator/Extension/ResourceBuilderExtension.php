@@ -5,9 +5,8 @@ namespace Level3\Mongator\Mondator\Extension;
 use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
-use Mandango\Mondator\Extension;
 
-class ResourceBuilderExtension extends ApigatorExtension
+class ResourceBuilderExtension extends Extension
 {
     const CLASSES_NAMESPACE = 'Resources\\Base\\Builder';
     const CLASSES_PREFIX = '';
@@ -126,15 +125,17 @@ EOF;
         if (isset($this->configClass['referencesOne'])) {
             foreach ($this->configClass['referencesOne'] as $key => $value) {
                 $class = $value['class'];
-                $referencedResourceName = strtolower($this->getClassName($class));
+                $referencedResourceName = $this->getResourceKey($class);
+
                 $code = $code . $this->generateRelationsToOneLinksLoopBody($key, $referencedResourceName);
             }
         }
 
         if (isset($this->configClass['referencesMany'])){
             foreach ($this->configClass['referencesMany'] as $key => $value) {
-                $collectionName = strtolower($this->getClassName($value['class']));
-                $code = $code . $this->generateRelationsToManyLinksLoopBody($key, $collectionName);
+                $referencedResourceName = $this->getResourceKey($value['class']);
+
+                $code = $code . $this->generateRelationsToManyLinksLoopBody($key, $referencedResourceName);
             }
         }
 
@@ -148,6 +149,11 @@ EOF;
         $definition->addMethod($method);
     }
 
+    private function getResourceKey($class)
+    {
+        return strtolower(str_replace('\\', DIRECTORY_SEPARATOR, $this->getClassName($class)));
+    }
+
     private function generateRelationsToOneLinksLoopBody($key, $referencedResourceName)
     {
 
@@ -156,7 +162,7 @@ EOF;
         \$referenced = \$this->getDocument()->get%s();
         if (\$referenced) {
             \$this->getBuilder()->withLinkToResource('%s',
-                '%s', (string) \$referenced->getId(), \$referenced->getId()
+                '%s', (object) ['id' => \$referenced->getId()], (string) \$referenced->getId()
             );
         }\n
 EOF;
@@ -171,7 +177,7 @@ EOF;
 <<<EOF
         foreach (\$this->getDocument()->get%s() as \$relation) {
             \$this->getBuilder()->withLinkToResource('%s',
-                '%s', (string) \$relation->getId(), \$relation->getId()
+                '%s', (object) ['id' => \$relation->getId()], (string) \$relation->getId()
             );
         }\n
 EOF;

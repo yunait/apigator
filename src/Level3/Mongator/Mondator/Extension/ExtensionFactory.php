@@ -14,6 +14,7 @@ class ExtensionFactory
             $this->createEmptyResourceBuilderExtension($options),
             $this->createBaseDocumentRepositoryContainer($options),
             $this->createEmptyDocumentRepositoryContainer($options),
+            $this->createEmbeddedResourceExtension($options)
         );
     }
 
@@ -51,4 +52,10 @@ class ExtensionFactory
     {
         return new EmptyDocumentRepositoryContainer($options);
     }
+
+    protected function createEmbeddedResourceExtension($options = array())
+    {
+        return new EmbeddedResourceExtension($options);
+    }
+
 }
