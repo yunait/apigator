@@ -47,7 +47,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         $query = $this->documentRepository->createQuery();
 
         foreach ($criteria as $key => $value) {
-            $queryMethodName = sprintf('find%s', ucfirst($key));
+            $queryMethodName = sprintf('find%s', $key);
             if (method_exists($query, $queryMethodName)) {
                 $query->$queryMethodName($value);
             }
