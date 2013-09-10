@@ -6,6 +6,7 @@ use Mongator\Query\Chunk;
 use Mongator\Document\AbstractDocument;
 use Level3\Exceptions;
 use stdClass;
+use BadMethodCallException;
 
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
@@ -24,7 +25,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         return $this->documentRepository;
     }
 
-    public function find($sort, $lowerBound, $upperBound, array $criteria)
+    public function find($sort, $lowerBound, $upperBound, Array $criteria)
     {
         $criteria = $this->parseCriteriaTypes($criteria);
         $builder = $this->createResourceBuilder();
@@ -42,21 +43,40 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         return self::FIND_EMBEDDED_KEY;
     }
 
-    protected function getDocumentsFromDatabase($sort, $lowerBound, $upperBound, array $criteria)
+    protected function getDocumentsFromDatabase($sort, $lowerBound, $upperBound, Array $criteria)
     {
-        $query = $this->documentRepository->createQuery();
-
-        foreach ($criteria as $key => $value) {
-            $queryMethodName = sprintf('find%s', ucfirst($key));
-            if (method_exists($query, $queryMethodName)) {
-                $query->$queryMethodName($value);
-            }
-        }
+        $query = $this->createQuery($criteria);
 
         list($page, $pageSize) = $this->boundsToPageAndPageSize($lowerBound, $upperBound);
         $chunk = $this->getChunk($sort, $page, $pageSize);
         $result = $chunk->getResult($query);
         return $result;
+    }
+
+    private function createQuery(Array $criteria)
+    {
+        $query = $this->documentRepository->createQuery();
+        $this->applyCriteriaToQuery($query, $criteria);
+
+        return $query;
+    }
+
+    private function applyCriteriaToQuery($query, Array $criteria)
+    {
+        foreach ($criteria as $key => $value) {
+            $this->applyMethodToQuery($query, $key, $value);
+        }
+    }
+
+    private function applyMethodToQuery($query, $key, $value)
+    {
+        $method = sprintf('find%s', ucfirst($key));
+
+        if (!method_exists($query, $method)) {
+            throw new BadMethodCallException(sprintf('Invalid criteria "%s"', $key));
+        }
+    
+        $query->$method($value);
     }
 
     private function boundsToPageAndPageSize($lowerBound, $upperBound)
