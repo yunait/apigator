@@ -84,7 +84,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         if ($upperBound == 0) {
             $pageSize = self::MAX_PAGE_SIZE;
         } else {
-            $pageSize = min($upperBound - $lowerBound, self::MAX_PAGE_SIZE);
+            $pageSize = min($upperBound - $lowerBound + 1, self::MAX_PAGE_SIZE);
         }
 
         $page = $lowerBound / $pageSize;
