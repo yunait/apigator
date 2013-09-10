@@ -64,6 +64,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
     private function applyCriteriaToQuery($query, Array $criteria)
     {
         foreach ($criteria as $key => $value) {
+            $value = urldecode($value);
             $this->applyMethodToQuery($query, $key, $value);
         }
     }
