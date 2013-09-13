@@ -30,8 +30,6 @@ class EmptyResourceExtension extends Extension
 
         $this->definitions['emptyResource'] = $definition;
 
-                var_dump($this->getParentClass($this->getClassName()));
-
         $definition->setParentClass($this->getParentClass($this->getClassName()));
     }
 

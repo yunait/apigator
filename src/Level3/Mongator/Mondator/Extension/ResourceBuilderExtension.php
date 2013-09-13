@@ -162,7 +162,7 @@ EOF;
         \$referenced = \$this->getDocument()->get%s();
         if (\$referenced) {
             \$this->getBuilder()->withLinkToResource('%s',
-                '%s', (object) ['id' => \$referenced->getId()], (string) \$referenced->getId()
+                '%s', new \Level3\Messages\Parameters(['id' => \$referenced->getId()]), (string) \$referenced->getId()
             );
         }\n
 EOF;
@@ -177,7 +177,7 @@ EOF;
 <<<EOF
         foreach (\$this->getDocument()->get%s() as \$relation) {
             \$this->getBuilder()->withLinkToResource('%s',
-                '%s', (object) ['id' => \$relation->getId()], (string) \$relation->getId()
+                '%s', new \Level3\Messages\Parameters(['id' => \$relation->getId()]), (string) \$relation->getId()
             );
         }\n
 EOF;

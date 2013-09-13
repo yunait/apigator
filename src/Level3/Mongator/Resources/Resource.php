@@ -5,15 +5,27 @@ namespace Level3\Mongator\Resources;
 use Mongator\Query\Chunk;
 use Mongator\Document\AbstractDocument;
 use Level3\Exceptions;
-use stdClass;
+use Level3\Messages\Parameters;
 use BadMethodCallException;
 
 abstract class Resource extends \Level3\Repository implements \Level3\Repository\Getter, \Level3\Repository\Finder, \Level3\Repository\Putter, \Level3\Repository\Poster, \Level3\Repository\Deleter
 {
     const MAX_PAGE_SIZE = 100;
     const FIND_EMBEDDED_KEY = 'documents';
-    
+    const KEY_ID = 'id';
+
     protected $documentRepository;
+    private $name;
+
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    public function getName()
+    {
+        return $this->name;
+    }
 
     public function setDocumentRepository($documentRepository)
     {
@@ -25,17 +37,32 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         return $this->documentRepository;
     }
 
-    public function find($sort, $lowerBound, $upperBound, Array $criteria)
+    public function find(Parameters $parameters, $sort, $lowerBound, $upperBound, Array $criteria)
     {
-        $criteria = $this->parseCriteriaTypes($criteria);
         $builder = $this->createResourceBuilder();
-        $documents = $this->getDocumentsFromDatabase($sort, $lowerBound, $upperBound, $criteria);
 
+        $documents = $this->getDocuments($parameters, $sort, $lowerBound, $upperBound, $criteria);
         foreach ($documents as $id => $document) {
-            $builder->withEmbedded($this->getRelationsName(), $this->getKey(), (object) ['id' => $id]);
+            $builder->withEmbedded(
+                $this->getRelationsName(), 
+                $this->getKey(), 
+                $this->createParametersFromDocument($document)
+            );
         }
 
         return $builder->build();
+    }
+
+    protected function createParametersFromDocument(AbstractDocument $document)
+    {
+        return new Parameters([self::KEY_ID => $document->getId()]);
+    }
+
+    protected function getDocuments(Parameters $parameters, $sort, $lowerBound, $upperBound, Array $criteria)
+    {
+        $criteria = $this->parseCriteriaTypes($criteria);
+
+        return $this->getDocumentsFromDatabase($sort, $lowerBound, $upperBound, $criteria);
     }
 
     protected function getRelationsName()
@@ -97,41 +124,44 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         return (new Chunk())->set($sort, $page, $pageSize);
     }
 
-    public function get($id)
+    public function get(Parameters $parameters)
     {
-        $document = $this->getDocument($id);
+        $document = $this->getDocument($parameters);
         return $this->getDocumentAsResource($document);
     }
 
-    public function put($data)
+    public function put(Parameters $parameters, $data)
     {
-        $document = $this->documentRepository->create();
-        $document->fromArray($data);
-        $this->persistsDocument($document);
+        $document = $this->createDocument($parameters);
+        $this->persistsDocument($document, $data);
 
         return $this->getDocumentAsResource($document);
     }
 
-    public function post($id, $data)
+    public function post(Parameters $parameters, $data)
     {
-        $document = $this->getDocument($id);
+        $document = $this->getDocument($parameters);
         unset($data['id']);
         
-        $document->fromArray($data);
-        $this->persistsDocument($document);
+        $this->persistsDocument($document, $data);
         
         return $this->getDocumentAsResource($document);
     }
 
-    public function delete($data)
+    public function delete(Parameters $parameters)
     {
-        $document = $this->getDocument($id);
+        $document = $this->getDocument($parameters);
         $this->deleteDocument($document);
     }
 
-    protected function getDocument(stdClass $parameters)
+    protected function createDocument(Parameters $parameters)
     {
-        $result = $this->documentRepository->findById([$parameters->id]);
+        return $this->documentRepository->create();
+    }
+
+    protected function getDocument(Parameters $parameters)
+    {
+        $result = $this->documentRepository->findById([$parameters->get(self::KEY_ID)]);
         if ($result) {
             return end($result);
         } else {
@@ -139,8 +169,9 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         }
     }
 
-    protected function persistsDocument(AbstractDocument $document)
+    protected function persistsDocument(AbstractDocument $document, Array $data)
     {
+        $document->fromArray($data);
         $document->save();
     }
 

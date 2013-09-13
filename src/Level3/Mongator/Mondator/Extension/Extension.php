@@ -44,7 +44,22 @@ abstract class Extension extends BaseExtension
 
     protected function doClassProcess()
     {
-        $this->generateClass();
+        if ($this->isCandidate()) {
+            $this->generateClass();
+        }
+    }
+
+    protected function isCandidate()
+    {
+        if (!$this->configClass['isEmbedded']) {
+            return true;
+        }
+
+        if (isset($this->configClass['fields']['id'])) {
+            return true;
+        }
+        
+        return false;
     }
 
     protected abstract function generateClass();
