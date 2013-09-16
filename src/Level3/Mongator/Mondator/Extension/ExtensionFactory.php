@@ -9,9 +9,8 @@ class ExtensionFactory
         return array(
             $this->createResourceExtension($options),
             $this->createEmptyResourceExtension($options),
-            $this->createResourceBuilderBaseExtension($options),
-            $this->createResourceBuilderExtension($options),
-            $this->createEmptyResourceBuilderExtension($options),
+            $this->createResourceFormatterExtension($options),
+            $this->createEmptyResourceFormatterExtension($options),
         );
     }
 
@@ -25,18 +24,13 @@ class ExtensionFactory
         return new EmptyResourceExtension($options);
     }
 
-    protected function createResourceBuilderBaseExtension($options = array())
+    protected function createResourceFormatterExtension($options = array())
     {
-        return new ResourceBuilderBaseExtension($options);
+        return new ResourceFormatterExtension($options);
     }
 
-    protected function createResourceBuilderExtension($options = array())
+    protected function createEmptyResourceFormatterExtension($options = array())
     {
-        return new ResourceBuilderExtension($options);
-    }
-
-    protected function createEmptyResourceBuilderExtension($options = array())
-    {
-        return new EmptyResourceBuilderExtension($options);
+        return new EmptyResourceFormatterExtension($options);
     }
 }

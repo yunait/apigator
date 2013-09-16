@@ -47,10 +47,10 @@ class ResourceExtension extends Extension
     private function addGetDocumentAsResourceToDefinition(Definition $definition)
     {
         $builderClass = '\\' . $this->getOption('namespace') . '\\' .
-            EmptyResourceBuilderExtension::CLASSES_NAMESPACE . '\\' .
-            EmptyResourceBuilderExtension::CLASSES_PREFIX .
+            EmptyResourceFormatterExtension::CLASSES_NAMESPACE . '\\' .
+            EmptyResourceFormatterExtension::CLASSES_PREFIX .
             $this->getClassName() .
-            EmptyResourceBuilderExtension::CLASSES_SUFFIX;
+            EmptyResourceFormatterExtension::CLASSES_SUFFIX;
 
         $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\AbstractDocument $document',
 <<<EOF

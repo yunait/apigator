@@ -95,4 +95,3 @@ abstract class EmbeddedResource extends Resource
         return $embedded;
     }
 }
-

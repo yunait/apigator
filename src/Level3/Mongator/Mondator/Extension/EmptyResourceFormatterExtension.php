@@ -7,11 +7,11 @@ use Mandango\Mondator\Definition\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 
-class EmptyResourceBuilderExtension extends Extension
+class EmptyResourceFormatterExtension extends Extension
 {
-    const CLASSES_NAMESPACE = 'Resources\\Builder';
+    const CLASSES_NAMESPACE = 'Resources';
     const CLASSES_PREFIX = '';
-    const CLASSES_SUFFIX = 'Builder';
+    const CLASSES_SUFFIX = 'Formatter';
 
     public function __construct($options = array())
     {
@@ -36,10 +36,10 @@ class EmptyResourceBuilderExtension extends Extension
     {
         return '\\' . $this->getOption('namespace') .
         '\\' .
-        ResourceBuilderExtension::CLASSES_NAMESPACE .
+        ResourceFormatterExtension::CLASSES_NAMESPACE .
         '\\' .
-        ResourceBuilderExtension::CLASSES_PREFIX .
+        ResourceFormatterExtension::CLASSES_PREFIX .
         $class .
-        ResourceBuilderExtension::CLASSES_SUFFIX;
+        ResourceFormatterExtension::CLASSES_SUFFIX;
     }
 }
