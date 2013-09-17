@@ -29,7 +29,7 @@ class ResourceFormatterExtension extends Extension
 
         $definition = $this->definitionFactory->create($targetClassName, $output);        
         $definition->setAbstract(true);
-        $definition->setParentClass('\Level3\Mongator\Resources\Formatter');
+        $definition->setParentClass('\Level3\Mongator\Formatter\Formatter');
 
         $this->definitions['resourceBuilder'] = $definition;
 

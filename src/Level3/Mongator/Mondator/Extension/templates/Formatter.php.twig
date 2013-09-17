@@ -1,44 +1,37 @@
 <?php
 
-    public function __construct(\Level3\Hal\ResourceBuilder $builder, $document)
+    public function toResponse(\Level3\Hal\ResourceBuilder $builder, \Mongator\Document\AbstractDocument $document)
     {
-        parent::__construct($builder, $document);
-        $this->initAllowedKeys();
-    }
+        $data = $document->toArray();
 
-    private function initAllowedKeys()
-    {
-        $this->allowedKeys = array(
-{% for name in config_class.fields|keys %}
-{% if config_class.fields[name].hideFromApi | default(false) == false %}
-            '{{ name }}',
-{% endif %}
-{% endfor %}
-        );
-    }
-
-    protected function setData()
-    {
-        $data = $this->extractBasicInfo();
-        $data['id'] = (string) $data['id'];
 {# embeddedsOne #}
 {% for name in config_class.embeddedsOne|keys %}
-        $data['{{ name }}'] = $this->extract{{ name|ucfirst }}();
+        ${{ name }} = $document->get{{ name|ucfirst }}();
+        if (!${{ name }}) {
+            return null;
+        }
+
+        $data['{{ name }}'] = $this->types->toResponseArray(${{ name }}->toArray());
+
 {% endfor %}
+
 {# embeddedsMany #}
 {% for name in config_class.embeddedsMany|keys %}
-        $data['{{ name }}'] = $this->extract{{ name|ucfirst }}();
-{% endfor %}
-        $this->getBuilder()->withData($data);
-    }
+        ${{ name }} = [];
+        foreach($document->get{{ name|ucfirst }}() as $elem) {
+            ${{ name }}[] = $this->types->toResponseArray($elem->toArray());
+        }
 
-    protected function setLinks()
-    {
+        $data['{{ name }}'] = ${{ name }};
+
+{% endfor %}
+        $builder->withData($this->types->toResponseArray($data));
+
 {# referencesOne #}
 {% for name in config_class.referencesOne|keys %}
-        $referenced = $this->getDocument()->get{{ name|ucfirst }}();
+        $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $this->getBuilder()->withLinkToResource('{{ name }}',
+            $builder->withLinkToResource('{{ name }}',
                 '{{ extension.getResourceKey(config_class.referencesOne[name].class) }}', new \Level3\Messages\Parameters(['id' => $referenced->getId()]), (string) $referenced->getId()
             );
         }
@@ -46,31 +39,36 @@
 
 {# referencesMany #}
 {% for name in config_class.referencesMany|keys %}
-        foreach ($this->getDocument()->get{{ name|ucfirst }}() as $relation) {
-            $this->getBuilder()->withLinkToResource('{{ name }}',
+        foreach ($document->get{{ name|ucfirst }}() as $relation) {
+            $builder->withLinkToResource('{{ name }}',
                 '{{ extension.getResourceKey(config_class.referencesMany[name].class) }}', new \Level3\Messages\Parameters(['id' => $relation->getId()]), (string) $relation->getId()
             );
         }
+
 {% endfor %}
+
+        return $builder->build();
     }
 
-{# embeddedsOne #}
-{% for name in config_class.embeddedsOne|keys %}
-    protected function extract{{ name|ucfirst }}()
+    public function fromRequest(Array $data)
     {
-        ${{ name }} = \$this->getDocument()->get{{ name|ucfirst }}();
-        if (!${{ name }}) return null;
-        return ${{ name }}->toArray();
-    }
+{% for name in config_class.fields|keys %}
+{% if config_class.fields[name].type  == 'date' %}
+        if (isset($data['{{ name }}'])) {
+            $data['{{ name }}'] = $this->types->fromRequest('DateTime', $data['{{ name }}']);
+        }
+{% endif %}
 {% endfor %}
 
-{# embeddedsMany #}
-{% for name in config_class.embeddedsMany|keys %}
-    protected function extract{{ name|ucfirst }}()
-    {
-        ${{ name }} = [];
-        foreach($this->getDocument()->get{{ name|ucfirst }}() as $elem) ${{ name }}[] = $elem->toArray();
 
-        return ${{ name }};
-    }
+{# referencesOne #}
+{% for name in config_class.referencesOne|keys %}
+        if (isset($data['{{ name }}'])) {
+            $data['{{ name }}_reference_field'] = $this->types->fromRequest('MongoId', $data['{{ name }}']);
+            unset($data['{{ name }}']);
+        }
 {% endfor %}
+
+        return $data;
+    }
+

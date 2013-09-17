@@ -33,6 +33,7 @@ class ResourceExtension extends Extension
         $this->setParentClass($definition);
         $this->addGetDocumentAsResourceToDefinition($definition);
         $this->addParseCriteriaTypesMethodToDefinition($definition);
+        $this->addPersistsDocumentoDefinition($definition);
     }
 
     private function setParentClass(Definition $definition)
@@ -46,7 +47,7 @@ class ResourceExtension extends Extension
 
     private function addGetDocumentAsResourceToDefinition(Definition $definition)
     {
-        $builderClass = '\\' . $this->getOption('namespace') . '\\' .
+        $formaterClass = '\\' . $this->getOption('namespace') . '\\' .
             EmptyResourceFormatterExtension::CLASSES_NAMESPACE . '\\' .
             EmptyResourceFormatterExtension::CLASSES_PREFIX .
             $this->getClassName() .
@@ -54,11 +55,39 @@ class ResourceExtension extends Extension
 
         $method = new Method('protected', 'getDocumentAsResource', '\Mongator\Document\AbstractDocument $document',
 <<<EOF
-        \$builder = new $builderClass(\$this->createResourceBuilder(), \$document);
-        return \$builder->build();
+        \$formatter = new $formaterClass();
+        return \$formatter->toResponse(\$this->createResourceBuilder(), \$document);
 EOF
         );
+
         $definition->addMethod($method);
+    }
+
+    private function addPersistsDocumentoDefinition(Definition $definition)
+    {
+        $formaterClass = '\\' . $this->getOption('namespace') . '\\' .
+            EmptyResourceFormatterExtension::CLASSES_NAMESPACE . '\\' .
+            EmptyResourceFormatterExtension::CLASSES_PREFIX .
+            $this->getClassName() .
+            EmptyResourceFormatterExtension::CLASSES_SUFFIX;
+
+        $method = new Method('protected', 'persistsDocument', '\Mongator\Document\AbstractDocument $document, Array $data',
+<<<EOF
+        \$formatter = new $formaterClass();
+        \$data = \$formatter->fromRequest(\$data);
+        return parent::persistsDocument(\$document, \$data);
+EOF
+        );
+
+        $definition->addMethod($method);
+    }
+
+
+
+    protected function persistsDocument(AbstractDocument $document, Array $data)
+    {
+        $document->fromArray($data);
+        $document->save();
     }
 
     private function addParseCriteriaTypesMethodToDefinition(\Mandango\Mondator\Definition $definition)
