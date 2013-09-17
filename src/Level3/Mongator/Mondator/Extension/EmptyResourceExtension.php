@@ -24,13 +24,8 @@ class EmptyResourceExtension extends Extension
 
     protected function generateClass()
     {
-        $output = $this->outputFactory->create($this->getOption('output'), false);
-        $targetClassName = $this->getTargetClass($this->getClassName());
-        $definition = $this->definitionFactory->create($targetClassName, $output);
-
-        $this->definitions['emptyResource'] = $definition;
-
-        $definition->setParentClass($this->getParentClass($this->getClassName()));
+        $this->definitions['emptyResource'] = $this->definition;
+        $this->definition->setParentClass($this->getParentClass($this->getClassName()));
     }
 
     private function getParentClass($class)

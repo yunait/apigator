@@ -23,17 +23,12 @@ class ResourceExtension extends Extension
 
     protected function generateClass()
     {
-        $output = $this->outputFactory->create($this->getOption('output'), true);
-        $targetClassName = $this->getTargetClass($this->getClassName());
-        $definition = $this->definitionFactory->create($targetClassName, $output);
+        $this->definitions['emptyResourceBuilder'] = $this->definition;
 
-        $this->definitions['resource'] = $definition;
-        $definition->setAbstract(true);
-
-        $this->setParentClass($definition);
-        $this->addGetDocumentAsResourceToDefinition($definition);
-        $this->addParseCriteriaTypesMethodToDefinition($definition);
-        $this->addPersistsDocumentoDefinition($definition);
+        $this->setParentClass($this->definition);
+        $this->addGetDocumentAsResourceToDefinition($this->definition);
+        $this->addParseCriteriaTypesMethodToDefinition($this->definition);
+        $this->addPersistsDocumentoDefinition($this->definition);
     }
 
     private function setParentClass(Definition $definition)

@@ -24,14 +24,9 @@ class ResourceFormatterExtension extends Extension
 
     protected function generateClass()
     {
-        $output = $this->outputFactory->create($this->getOption('output'), true);
-        $targetClassName = $this->getTargetClass($this->getClassName());
-
-        $definition = $this->definitionFactory->create($targetClassName, $output);        
-        $definition->setAbstract(true);
-        $definition->setParentClass('\Level3\Mongator\Formatter\Formatter');
-
-        $this->definitions['resourceBuilder'] = $definition;
+        $this->definitions['resourceBuilder'] = $this->definition;
+        $this->definition->setAbstract(true);
+        $this->definition->setParentClass('\Level3\Mongator\Formatter\Formatter');
 
         $this->processTemplate($this->definitions['resourceBuilder'],
             file_get_contents(__DIR__.'/templates/Formatter.php.twig')
