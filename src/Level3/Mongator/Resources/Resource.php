@@ -50,7 +50,10 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
             );
         }
 
-        return $builder->build();
+        $resource = $builder->build();
+        $resource->repository = $this;
+
+        return $resource;
     }
 
     protected function createParametersFromDocument(AbstractDocument $document)
@@ -127,7 +130,10 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
     public function get(Parameters $parameters)
     {
         $document = $this->getDocument($parameters);
-        return $this->getDocumentAsResource($document);
+        $resource = $this->getDocumentAsResource($document);
+
+        $resource->repository = $this;
+        return $resource;
     }
 
     public function put(Parameters $parameters, $data)
@@ -135,7 +141,10 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         $document = $this->createDocument($parameters);
         $this->persistsDocument($document, $data);
 
-        return $this->getDocumentAsResource($document);
+        $resource = $this->getDocumentAsResource($document);
+
+        $resource->repository = $this;
+        return $resource;
     }
 
     public function post(Parameters $parameters, $data)
@@ -145,7 +154,10 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
         
         $this->persistsDocument($document, $data);
         
-        return $this->getDocumentAsResource($document);
+        $resource = $this->getDocumentAsResource($document);
+
+        $resource->repository = $this;
+        return $resource;
     }
 
     public function delete(Parameters $parameters)
