@@ -112,7 +112,7 @@ abstract class Resource extends \Level3\Repository implements \Level3\Repository
 
     private function boundsToPageAndPageSize($lowerBound, $upperBound)
     {
-        if ($upperBound == 0) {
+        if ($upperBound == 0 && $lowerBound != 0) {
             $pageSize = self::MAX_PAGE_SIZE;
         } else {
             $pageSize = min($upperBound - $lowerBound + 1, self::MAX_PAGE_SIZE);
