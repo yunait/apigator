@@ -2,29 +2,7 @@
 
     public function toResponse(\Level3\Hal\ResourceBuilder $builder, \Mongator\Document\AbstractDocument $document)
     {
-        $data = $document->toArray();
-
-{# embeddedsOne #}
-{% for name in config_class.embeddedsOne|keys %}
-        ${{ name }} = $document->get{{ name|ucfirst }}();
-        if (!${{ name }}) {
-            return null;
-        }
-
-        $data['{{ name }}'] = $this->types->toResponseArray(${{ name }}->toArray());
-
-{% endfor %}
-
-{# embeddedsMany #}
-{% for name in config_class.embeddedsMany|keys %}
-        ${{ name }} = [];
-        foreach($document->get{{ name|ucfirst }}() as $elem) {
-            ${{ name }}[] = $this->types->toResponseArray($elem->toArray());
-        }
-
-        $data['{{ name }}'] = ${{ name }};
-
-{% endfor %}
+        $data = $this->collectDataForResponse($document);
         $builder->withData($this->types->toResponseArray($data));
 
 {# referencesOne #}
@@ -47,7 +25,36 @@
 
 {% endfor %}
 
+    
+
         return $builder->build();
+    }
+
+    protected function collectDataForResponse($document)
+    {
+        $data = $document->toArray();
+
+{# embeddedsOne #}
+{% for name in config_class.embeddedsOne|keys %}
+        ${{ name }} = $document->get{{ name|ucfirst }}();
+        if (!${{ name }}) {
+            return null;
+        }
+
+        $data['{{ name }}'] = $this->types->toResponseArray(${{ name }}->toArray());
+
+{% endfor %}
+{# embeddedsMany #}
+{% for name in config_class.embeddedsMany|keys %}
+        ${{ name }} = [];
+        foreach($document->get{{ name|ucfirst }}() as $elem) {
+            ${{ name }}[] = $this->types->toResponseArray($elem->toArray());
+        }
+
+        $data['{{ name }}'] = ${{ name }};
+{% endfor %}
+
+        return $data;
     }
 
     public function fromRequest(Array $data)
