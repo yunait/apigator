@@ -37,7 +37,7 @@ foreach ($metadata->getDocumentClasses() as $class) {
 $mondator = new Mondator();
 $mondator->setConfigClasses($configClasses);
 $mondator->setExtensions(array(
-    new Level3\Mongator\Mondator\Extension\Level3Extension($options)
+    new Level3\Mongator\Mondator\Extension\Level3($options)
 
 ));
 
