@@ -93,19 +93,24 @@ EOF
     {
         $namespace = $this->getOption('namespace');
         $model = $this->getModelClassName();
+        $name = $namespace . self::NAMESPACE_SEPARARTOR . $model;
+        $baseName = $namespace . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model;
 
         $classes = array();
-        $classes['resource'] = $namespace . self::NAMESPACE_SEPARARTOR . $model;
-        $classes['resource_base'] = $namespace . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model;
-        $classes['repository'] = $classes['resource'] . 'Repository';
-        $classes['repository_base'] = $classes['resource_base'] . 'Repository';
+        $classes['resource'] = $name . 'Resource';
+        $classes['resource_base'] = $baseName . 'Resource';
+        $classes['repository'] = $name . 'Repository';
+        $classes['repository_base'] = $baseName . 'Repository';
+
+        $this->configClass['classes'] = $classes;
 
         $this->definitions['resource'] = $this->createDefinition(
             $classes['resource'], $classes['resource_base']
         );
 
         $this->definitions['resource_base'] = $this->createDefinition(
-            $classes['resource_base'], 'Level3\Resource'
+            $classes['resource_base'], 'Level3\Resource',
+            true, 'Resource'
         );
 
         $this->definitions['repository'] = $this->createDefinition(

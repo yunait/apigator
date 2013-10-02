@@ -1,0 +1,11 @@
+<?php
+    
+    static public function createFromDocument(\{{config_class.classes.repository}} $repository, \Mongator\Document\Document $document)
+    {
+        return new static($repository);
+    }
+
+    static public function createFromDocuments(\{{config_class.classes.repository}} $repository, Array $documents)
+    {
+        return new static($repository);
+    }

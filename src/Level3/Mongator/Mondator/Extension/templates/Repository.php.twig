@@ -1,86 +1,73 @@
 <?php
     protected $mongator;
 
-    public function __construct(\Mongator\Mongator $mongator)
+    public function __construct(\Level3\Level3 $level3, \Mongator\Mongator $mongator)
     {
+        parent::__construct($level3);
+
         $this->mongator = $mongator;
         $this->documentClass = '{{ class }}';
     }
 
     public function find(\Level3\Resource\Parameters $attributes, \Level3\Resource\Parameters $filters)
     {
-        $documents = $this->getDocuments($filters);
-        foreach ($documents as $id => $document) {
-            $builder->withEmbedded(
-                $this->getRelationsName(), 
-                $this->getKey(), 
-                $this->createParametersFromDocument($document)
-            );
-        }
-
-        $resource = $builder->build();
-        $resource->repository = $this;
-
-        return $resource;
-    }
-
-    protected function getDocumentsFromDatabase(\Level3\Resource\Parameters $filters, Array $criteria)
-    {
         $query = $this->getDocumentRepository()->createQuery();
-        $this->applyCriteriaToQuery($query, $filters['criteria']);
+        $this->applyCriteriaToQuery($query, $filters);
 
-        list($page, $pageSize) = $this->boundsToPageAndPageSize($filters['range'][0], $filters['range'][1]);
-
-        $chunk = $this->getChunk($filters['sort'], $page, $pageSize);
+        $chunk = $this->getChunk($filters);
         $result = $chunk->getResult($query);
 
-        return $result;
+        return \{{config_class.classes.resource}}::createFromDocuments($this, $result->getData());
     }
 
-    private function applyCriteriaToQuery($query, Array $criteria)
+    protected function applyCriteriaToQuery($query, \Level3\Resource\Parameters $filters)
     {
-        foreach ($criteria as $key => $value) {
-            $value = urldecode($value);
+        foreach ($filters->get('criteria') as $key => $value) {
             $this->applyMethodToQuery($query, $key, $value);
         }
     }
 
-    private function applyMethodToQuery($query, $key, $value)
+    protected function applyMethodToQuery($query, $criteria, $value)
     {
-        $method = sprintf('find%s', ucfirst($key));
+        $method = sprintf('find%s', ucfirst($criteria));
 
-        if (!method_exists($query, $method)) {
-            throw new BadMethodCallException(sprintf('Invalid criteria "%s"', $key));
+        if (!is_callable(array($query, $method))) {
+            throw new \Level3\Exceptions\BadRequest(
+                sprintf('Invalid criteria "%s"', $criteria)
+            );
         }
     
         $query->$method($value);
     }
-    
-    protected function boundsToPageAndPageSize($lowerBound, $upperBound)
-    {
-        if ($upperBound == 0) {
-            $pageSize = self::MAX_PAGE_SIZE;
-        } else {
-            $pageSize = min($upperBound - $lowerBound + 1, self::MAX_PAGE_SIZE);
-        }
 
-        $page = $lowerBound / $pageSize;
-        return array($page, $pageSize);
-    }
-
-    protected function getChunk($sort, $page, $pageSize)
+    protected function getChunk(\Level3\Resource\Parameters $filters)
     {
-        $chunk = new Chunk();
-        $chunk->set($sort, $page, $pageSize);
+        list($page, $pageSize) = $this->boundsToPageAndPageSize($filters);
+
+        $chunk = new \Mongator\Query\Chunk();
+        $chunk->set($filters->get('sort'), $page, $pageSize);
         
         return $chunk;
     }
 
+    protected function boundsToPageAndPageSize(\Level3\Resource\Parameters $filters)
+    {
+        $range = $filters->get('range');
+
+        $pageSize = 100;
+        if ((int) $range[1] != 0) {
+            $pageSize = min($range[1] - $range[0], $pageSize);
+        }
+
+        $page = $range[0] / $pageSize;
+        return array($page, $pageSize);
+    }
 
     public function get(\Level3\Resource\Parameters $attributes)
     {
         $document = $this->getDocument($attributes);
-        return $this->getDocumentAsResource($document);
+
+        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
     }
 
     public function post(\Level3\Resource\Parameters $attributes, Array $data)
@@ -89,7 +76,7 @@
         $document->fromArray($data);
         $document->save();
 
-        return $this->getDocumentAsResource($document);
+        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
     }
 
     public function put(\Level3\Resource\Parameters $attributes, Array $data)
@@ -102,7 +89,7 @@
         $document->setIsNew(false);
         $document->save();
 
-        return $this->getDocumentAsResource($document);
+        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
     }
 
     public function patch(\Level3\Resource\Parameters $attributes, Array $data)
@@ -113,22 +100,22 @@
         $document->fromArray($data);
         $document->save();    
 
-        return $this->getDocumentAsResource($document);
+        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
     }
 
     public function delete(\Level3\Resource\Parameters $attributes)
     {
-        $document = $this->getDocument($parameters);
+        $document = $this->getDocument($attributes);
         $this->getDocumentRepository()->delete($document);
     }
 
-    protected function getDocument(Parameters $parameters)
+    protected function getDocument(\Level3\Resource\Parameters $parameters)
     {
         $id = $this->castStringToMongoId($parameters->get('id'));
 
-        $result = $this->getDocumentRepository()->findById([$id]);
+        $result = $this->getDocumentRepository()->findById(array($id))->one();
         if ($result) {
-            return end($result);
+            return $result;
         } else {
             throw new \Level3\Exceptions\NotFound();
         }

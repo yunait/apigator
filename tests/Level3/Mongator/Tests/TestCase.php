@@ -13,6 +13,7 @@ namespace Level3\Mongator\Tests;
 
 use Mongator\Connection;
 use Mongator\Mongator;
+use Mockery as m;
 
 class TestCase extends \PHPUnit_Framework_TestCase
 {
@@ -60,5 +61,35 @@ class TestCase extends \PHPUnit_Framework_TestCase
         foreach ($this->db->listCollections() as $collection) {
             $collection->drop();
         }
+    }
+
+    protected function createLevel3Mock()
+    {
+        return m::mock('Level3\Level3');
+    }
+
+    protected function createMongatorMock()
+    {
+        return m::mock('Mongator\Mongator');
+    }
+
+    protected function createQueryMock()
+    {
+        return m::mock('Mongator\Query\Query');
+    }
+
+    protected function createDocumentRepositoryMock()
+    {
+        return m::mock('Model\ArticleRepository');
+    }
+
+    protected function createDocumentMock()
+    {
+        return m::mock('Model\Article');
+    }
+
+    protected function createParametersMock()
+    {
+        return m::mock('Level3\Resource\Parameters');
     }
 }
