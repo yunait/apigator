@@ -62,11 +62,6 @@ class Level3 extends BaseExtension
         $this->initDefinitionsProcess();
     }
 
-    private function getModelClassName()
-    {
-        return str_replace($this->getOption('models_namespace'), '', $this->class);
-    }
-
     private function createDefinition($class, $parent, $override = false, $template = false)
     {
         if ($override) $output = $this->outputOverride;
@@ -89,18 +84,37 @@ EOF
         return $definition;
     }
 
+
+    public function getModelClassName($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $model = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . $model;
+    }
+
+    public function getBaseModelClassName($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $model = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model ;
+    }
+
     private function initDefinitionsProcess()
     {
-        $namespace = $this->getOption('namespace');
-        $model = $this->getModelClassName();
-        $name = $namespace . self::NAMESPACE_SEPARARTOR . $model;
-        $baseName = $namespace . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model;
 
         $classes = array();
-        $classes['resource'] = $name . 'Resource';
-        $classes['resource_base'] = $baseName . 'Resource';
-        $classes['repository'] = $name . 'Repository';
-        $classes['repository_base'] = $baseName . 'Repository';
+        $classes['resource'] = $this->getModelClassName() . 'Resource';
+        $classes['resource_base'] = $this->getBaseModelClassName() . 'Resource';
+        $classes['repository'] = $this->getModelClassName() . 'Repository';
+        $classes['repository_base'] = $this->getBaseModelClassName() . 'Repository';
 
         $this->configClass['classes'] = $classes;
 

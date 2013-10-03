@@ -38,8 +38,7 @@ class Types
         foreach ($data as $key => $value) {
             if (!is_object($value)) continue;
 
-            $class = get_class($value);
-            $data[$key] = $value = $this->toResponse($class, $value);
+            $data[$key] = $value = $this->toResponse($value);
             if (!$value) {
                 unset($data[$key]);
             }
@@ -48,8 +47,9 @@ class Types
         return $data;
     }
 
-    public function toResponse($class, $object)
+    public function toResponse($object)
     {
+        $class = get_class($value);
         $type = $this->get($class);
         if ($type) {
             return $type->toResponse($object);

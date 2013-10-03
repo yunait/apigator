@@ -17,7 +17,10 @@
         $chunk = $this->getChunk($filters);
         $result = $chunk->getResult($query);
 
-        return \{{config_class.classes.resource}}::createFromDocuments($this, $result->getData());
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocuments($result->getData());
+
+        return $resource;
     }
 
     protected function applyCriteriaToQuery($query, \Level3\Resource\Parameters $filters)
@@ -67,7 +70,10 @@
     {
         $document = $this->getDocument($attributes);
 
-        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocument($document);
+
+        return $resource;
     }
 
     public function post(\Level3\Resource\Parameters $attributes, Array $data)
@@ -76,7 +82,10 @@
         $document->fromArray($data);
         $document->save();
 
-        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocument($document);
+
+        return $resource;
     }
 
     public function put(\Level3\Resource\Parameters $attributes, Array $data)
@@ -89,7 +98,10 @@
         $document->setIsNew(false);
         $document->save();
 
-        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocument($document);
+
+        return $resource;
     }
 
     public function patch(\Level3\Resource\Parameters $attributes, Array $data)
@@ -100,7 +112,10 @@
         $document->fromArray($data);
         $document->save();    
 
-        return \{{config_class.classes.resource}}::createFromDocument($this, $document);
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocument($document);
+
+        return $resource;
     }
 
     public function delete(\Level3\Resource\Parameters $attributes)
