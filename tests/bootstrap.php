@@ -25,6 +25,7 @@ $mondator->process();
 $options = array(
     'default_output' => __DIR__,
     'namespace' => 'Rest',
+    'hub_loader_class' => 'Rest\\Hub\\Loader',
     'models_namespace' => 'Model\\'
 );
 

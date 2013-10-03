@@ -1,7 +1,15 @@
 <?php
-    
-    public function fromDocument(\Mongator\Document\Document $document)
+    protected $document;
+
+    public function setDocument(\Mongator\Document\Document $document)
     {
+        $this->document = $document;
+    }
+
+    public function getData()
+    {
+        $document = $this->document;
+
         $data = array();
 
 {# fields #}
@@ -26,25 +34,34 @@
 {% endfor %}
         $this->setData($data);
 
+        return parent::getData();
+    }
+    
+    protected function getRepository($repositoryKey)
+    {
+        return $this->repository->getLevel3()->getHub()->get($repositoryKey);
+    }
+
+    public function getLinks()
+    {
 {# referencesOne #}
-{% for name in config_class.referencesOne|keys %}
+{% for name, config in config_class.referencesOne %}
         $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $builder->withLinkToResource('{{ name }}',
-                'XXXX', new \Level3\Messages\Parameters(['id' => $referenced->getId()]), (string) $referenced->getId()
-            );
+            $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
+            $this->addResource('{{ name }}', $repository->create($referenced));
         }
-{% endfor %}
 
+{% endfor %}
 {# referencesMany #}
-{% for name in config_class.referencesMany|keys %}
+{% for name, config in config_class.referencesMany %}
+        $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
         foreach ($document->get{{ name|ucfirst }}() as $relation) {
-            $builder->withLinkToResource('{{ name }}',
-                'XXXX', new \Level3\Messages\Parameters(['id' => $relation->getId()]), (string) $relation->getId()
-            );
+            $this->addResource('{{ name }}', $repository->create($referenced));
         }
 
 {% endfor %}
+        return parent::getLinks();
     }
 
     public function fromDocuments(Array $documents)

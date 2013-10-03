@@ -2,15 +2,17 @@
 
 namespace Level3\Mongator\Mondator\Extension;
 
-use Mandango\Mondator\Extension as BaseExtension;
+use Camel\CaseTransformer;
+use Camel\Format;
 
+use Mandango\Mondator\Extension;
 use Mandango\Mondator\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 use Mandango\Mondator\Output;
 use Mongator\Twig\Mongator as MongatorTwig;
 
-class Level3 extends BaseExtension
+class Level3 extends Extension
 {
     const NAMESPACE_SEPARARTOR = '\\';
 
@@ -18,11 +20,6 @@ class Level3 extends BaseExtension
 
     protected $outputFactory;
     protected $definitionFactory;
-
-    //To be overriden by subclasses
-    protected $classesNamespace;
-    protected $classesPrefix;
-    protected $classesSuffix;
 
     protected function createOutput()
     {
@@ -33,7 +30,6 @@ class Level3 extends BaseExtension
 
         $this->output = new Output($dir);
         $this->outputOverride = new Output($dir, true);
-
     }
 
     protected function setup()
@@ -41,6 +37,7 @@ class Level3 extends BaseExtension
         $this->addRequiredOption('default_output');
         $this->addRequiredOption('namespace');
         $this->addRequiredOption('models_namespace');
+        $this->addRequiredOption('hub_loader_class');
     }
 
     protected function doClassProcess()
@@ -59,7 +56,13 @@ class Level3 extends BaseExtension
         }
 
         $this->checkDataNamesProcess();
+
         $this->initDefinitionsProcess();
+    }
+
+    protected function doPostGlobalProcess()
+    {
+        $this->globalHubProcess();
     }
 
     private function createDefinition($class, $parent, $override = false, $template = false)
@@ -107,6 +110,18 @@ EOF
         return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model ;
     }
 
+    public function getReposityKey($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $transformer = new CaseTransformer(new Format\CamelCase, new Format\SnakeCase);
+        $key = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $transformer->transform($key);
+    }
+
     private function initDefinitionsProcess()
     {
 
@@ -117,6 +132,8 @@ EOF
         $classes['repository_base'] = $this->getBaseModelClassName() . 'Repository';
 
         $this->configClass['classes'] = $classes;
+
+        $this->configClass['key'] = $this->getReposityKey();
 
         $this->definitions['resource'] = $this->createDefinition(
             $classes['resource'], $classes['resource_base']
@@ -146,6 +163,13 @@ EOF
         ));
     }
 
+    private function globalHubProcess()
+    {
+        $this->definitions['hub'] = $this->createDefinition(
+            $this->getOption('hub_loader_class'), 'Level3\Hub',
+            true, 'Hub'
+        );
+    }
 
     protected function isCandidate()
     {
@@ -162,17 +186,6 @@ EOF
         }
         
         return false;
-    }
-
-    protected function getTargetClass($className)
-    {
-        return $this->getOption('namespace') .
-        '\\' .
-        $this->classesNamespace .
-        '\\' .
-        $this->classesPrefix .
-        $className .
-        $this->classesSuffix;
     }
 
     protected function getClassName($className = null)

@@ -19,6 +19,9 @@ class RepositoryTest extends TestCase
     protected function getRepository()
     {
         $this->document = $this->createDocumentMock();
+        $this->document->shouldReceive('getId')->withNoArgs()
+            ->once()
+            ->andReturn(new \MongoId('4af9f23d8ead0e1d32000000'));
         
         $this->docRepository = $this->createDocumentRepositoryMock();
         $this->docRepository
