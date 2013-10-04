@@ -102,6 +102,10 @@ class RepositoryTest extends TestCase
             ->andReturn($mongoId);
 
         $document
+            ->shouldReceive('getId')->withNoArgs()->once()
+            ->andReturn($mongoId);
+            
+        $document
             ->shouldReceive('fromArray')->with($expectedData)->once()
             ->andReturn(null);
 
