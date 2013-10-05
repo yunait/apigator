@@ -42,10 +42,6 @@ class Level3 extends Extension
 
     protected function doClassProcess()
     {
-        if (!$this->isCandidate()) {
-            return;
-        }
-        
         $this->createOutput();
 
         $this->parseAndCheckFieldsProcess();
@@ -56,7 +52,6 @@ class Level3 extends Extension
         }
 
         $this->checkDataNamesProcess();
-
         $this->initDefinitionsProcess();
     }
 
@@ -110,6 +105,26 @@ EOF
         return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model ;
     }
 
+    public function getResourceClassName($class = null)
+    {
+        return $this->getModelClassName($class) . 'Resource';
+    }
+
+    public function getBaseResourceClassName($class = null)
+    {
+        return $this->getBaseModelClassName($class) . 'Resource';
+    }
+
+    public function getRepositoryClassName($class = null)
+    {
+        return $this->getModelClassName($class) . 'Repository';
+    }
+
+    public function getBaseRepositoryClassName($class = null)
+    {
+        return $this->getBaseModelClassName($class) . 'Repository';
+    }
+
     public function getReposityKey($class = null)
     {
         if (!$class) {
@@ -124,12 +139,14 @@ EOF
 
     private function initDefinitionsProcess()
     {
-
         $classes = array();
-        $classes['resource'] = $this->getModelClassName() . 'Resource';
-        $classes['resource_base'] = $this->getBaseModelClassName() . 'Resource';
-        $classes['repository'] = $this->getModelClassName() . 'Repository';
-        $classes['repository_base'] = $this->getBaseModelClassName() . 'Repository';
+        $classes['resource'] = $this->getResourceClassName();
+        $classes['resource_base'] = $this->getBaseResourceClassName();
+        
+        if ($this->isRepositoryNeeded()) {
+            $classes['repository'] = $this->getRepositoryClassName();
+            $classes['repository_base'] = $this->getBaseRepositoryClassName();
+        }
 
         $this->configClass['classes'] = $classes;
 
@@ -143,6 +160,10 @@ EOF
             $classes['resource_base'], 'Level3\Resource',
             true, 'Resource'
         );
+
+        if (!$this->isRepositoryNeeded()) {
+            return;
+        }
 
         $this->definitions['repository'] = $this->createDefinition(
             $classes['repository'], $classes['repository_base']
@@ -160,7 +181,7 @@ EOF
             '\Level3\Repository\Poster',
             '\Level3\Repository\Patcher', 
             '\Level3\Repository\Deleter'
-        ));
+        ));            
     }
 
     private function globalHubProcess()
@@ -171,7 +192,7 @@ EOF
         );
     }
 
-    protected function isCandidate()
+    protected function isRepositoryNeeded()
     {
         if (!isset($this->configClass['isEmbedded'])) {
             return true;

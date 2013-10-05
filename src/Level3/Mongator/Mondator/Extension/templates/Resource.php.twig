@@ -19,16 +19,16 @@
 {% endfor %}
 
 {# embeddedsOne #}
-{% for name in config_class.embeddedsOne|keys %}
+{% for name, config in config_class.embeddedsOne %}
         if (${{ name }} = $document->get{{ name|ucfirst }}()) {
-            $data['{{ name }}'] = $this->types->toResponseArray(${{ name }}->toArray());
+            $data['{{ name }}'] = new {{ extension.getResourceClassName(config.class) }}(${{ name }});
         }
 
 {% endfor %}
 {# embeddedsMany #}
-{% for name in config_class.embeddedsMany|keys %}
+{% for name, config in config_class.embeddedsMany %}
         foreach($document->get{{ name|ucfirst }}() as $embedded) {
-            $data['{{ name }}'][] = $this->types->toResponseArray($embedded->toArray());
+            $data['{{ name }}'][] = new {{ extension.getResourceClassName(config.class) }}($embedded);
         }
 
 {% endfor %}

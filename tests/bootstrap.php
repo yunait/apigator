@@ -31,9 +31,10 @@ $options = array(
 
 $configClasses = array();
 $metadata = new Model\Mapping\MetadataFactory();
-foreach ($metadata->getDocumentClasses() as $class) {
+foreach ($metadata->getClasses() as $class) {
     $configClasses[$class] = $metadata->getClass($class);
 }
+
 
 $mondator = new Mondator();
 $mondator->setConfigClasses($configClasses);

@@ -11,15 +11,18 @@
     public function registerDefinitions()
     {
 {% for class, config in config_classes %}
+{% if 'repository' in config.classes|keys %}
         $this->level3->getHub()->registerDefinition(
             '{{ config.key }}', 
             $this->get{{ class|replace({'\\': ''}) }}Repository()
         ); 
 
+{% endif %}
 {% endfor %} 
     }
 
 {% for class, config in config_classes %}
+{% if 'repository' in config.classes|keys %}
     protected function get{{ class|replace({'\\': ''}) }}Repository($fullClassName)
     {
         $self = $this;
@@ -31,4 +34,5 @@
             );
         };
     }
-{% endfor %}
+{% endif %}
+{% endfor %} 
