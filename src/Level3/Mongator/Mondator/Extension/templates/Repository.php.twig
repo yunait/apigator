@@ -1,0 +1,161 @@
+<?php
+    protected $mongator;
+
+    public function __construct(\Level3\Level3 $level3, \Mongator\Mongator $mongator)
+    {
+        parent::__construct($level3);
+
+        $this->mongator = $mongator;
+    }
+
+    public function create(\{{ class }} $document)
+    {
+        $attributes = new \Level3\Resource\Parameters(array(
+            'id' => (string) $document->getId()
+        ));
+
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->setAttributes($attributes);
+
+        return $resource;
+    }
+
+    public function find(\Level3\Resource\Parameters $attributes, \Level3\Resource\Parameters $filters)
+    {
+        $query = $this->getDocumentRepository()->createQuery();
+        $this->applyCriteriaToQuery($query, $filters);
+
+        $chunk = $this->getChunk($filters);
+        $result = $chunk->getResult($query);
+
+        $resource = new \{{config_class.classes.resource}}($this);
+        $resource->fromDocuments($result->getData());
+
+        return $resource;
+    }
+
+    protected function applyCriteriaToQuery($query, \Level3\Resource\Parameters $filters)
+    {
+        foreach ($filters->get('criteria') as $key => $value) {
+            $this->applyMethodToQuery($query, $key, $value);
+        }
+    }
+
+    protected function applyMethodToQuery($query, $criteria, $value)
+    {
+        $method = sprintf('find%s', ucfirst($criteria));
+
+        if (!is_callable(array($query, $method))) {
+            throw new \Level3\Exceptions\BadRequest(
+                sprintf('Invalid criteria "%s"', $criteria)
+            );
+        }
+    
+        $query->$method($value);
+    }
+
+    protected function getChunk(\Level3\Resource\Parameters $filters)
+    {
+        list($page, $pageSize) = $this->boundsToPageAndPageSize($filters);
+
+        $chunk = new \Mongator\Query\Chunk();
+        $chunk->set($filters->get('sort'), $page, $pageSize);
+        
+        return $chunk;
+    }
+
+    protected function boundsToPageAndPageSize(\Level3\Resource\Parameters $filters)
+    {
+        $range = $filters->get('range');
+
+        $pageSize = 100;
+        if ((int) $range[1] != 0) {
+            $pageSize = min($range[1] - $range[0], $pageSize);
+        }
+
+        $page = $range[0] / $pageSize;
+        return array($page, $pageSize);
+    }
+
+    public function get(\Level3\Resource\Parameters $attributes)
+    {
+        $document = $this->getDocument($attributes);
+
+        return $this->create($document);
+    }
+
+    public function post(\Level3\Resource\Parameters $attributes, Array $data)
+    {
+        $document = $this->getDocumentRepository()->create();
+        $document->fromArray($data);
+        $document->save();
+
+        return $this->create($document);
+    }
+
+    public function put(\Level3\Resource\Parameters $attributes, Array $data)
+    {
+        $orignalDocument = $this->getDocument($attributes);
+        $data['id'] = $orignalDocument->getId();
+
+        $document = $this->getDocumentRepository()->create();
+        $document->fromArray($data);
+        $document->setIsNew(false);
+        $document->save();
+
+        return $this->create($document);
+    }
+
+    public function patch(\Level3\Resource\Parameters $attributes, Array $data)
+    {
+        $document = $this->getDocument($attributes);
+        unset($data['id']);
+        
+        $document->fromArray($data);
+        $document->save();    
+
+        return $this->create($document);
+    }
+
+    public function delete(\Level3\Resource\Parameters $attributes)
+    {
+        $document = $this->getDocument($attributes);
+        $this->getDocumentRepository()->delete($document);
+    }
+
+    protected function getDocument(\Level3\Resource\Parameters $parameters)
+    {
+        $id = $this->castStringToMongoId($parameters->get('id'));
+
+        $result = $this->getDocumentRepository()->findById(array($id))->one();
+        if ($result) {
+            return $result;
+        } else {
+            throw new \Level3\Exceptions\NotFound();
+        }
+    }
+
+    protected function getDocumentRepository()
+    {
+        return $this->mongator->getRepository('{{ class }}');
+    }
+
+    protected function castStringToMongoId($id)
+    {
+        $valid = false;
+
+        try {
+            $mongoId = new \MongoId($id);
+            if ((string) $mongoId == $id) {
+                $valid = true;
+            }
+        } catch (\MongoException $e) {
+            
+        }
+        
+        if (!$valid) {
+            throw new \Level3\Exceptions\BadRequest();
+        }
+
+        return $mongoId;
+    }

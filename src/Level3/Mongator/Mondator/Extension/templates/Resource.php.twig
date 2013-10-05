@@ -1,0 +1,93 @@
+<?php
+    protected $document;
+
+    public function setDocument(\Mongator\Document\Document $document)
+    {
+        $this->document = $document;
+    }
+
+    public function getData()
+    {
+        $document = $this->document;
+
+        $data = array();
+
+{# fields #}
+        $data['id'] = (string) $document->getId();
+{% for name in config_class.fields|keys %}
+        $data['{{ name }}'] = $this->types->toResponse($document->get{{name|ucfirst}}());
+{% endfor %}
+
+{# embeddedsOne #}
+{% for name, config in config_class.embeddedsOne %}
+        if (${{ name }} = $document->get{{ name|ucfirst }}()) {
+            $data['{{ name }}'] = new {{ extension.getResourceClassName(config.class) }}(${{ name }});
+        }
+
+{% endfor %}
+{# embeddedsMany #}
+{% for name, config in config_class.embeddedsMany %}
+        foreach($document->get{{ name|ucfirst }}() as $embedded) {
+            $data['{{ name }}'][] = new {{ extension.getResourceClassName(config.class) }}($embedded);
+        }
+
+{% endfor %}
+        $this->setData($data);
+
+        return parent::getData();
+    }
+    
+    protected function getRepository($repositoryKey)
+    {
+        return $this->repository->getLevel3()->getHub()->get($repositoryKey);
+    }
+
+    public function getLinks()
+    {
+{# referencesOne #}
+{% for name, config in config_class.referencesOne %}
+        $referenced = $document->get{{ name|ucfirst }}();
+        if ($referenced) {
+            $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
+            $this->addResource('{{ name }}', $repository->create($referenced));
+        }
+
+{% endfor %}
+{# referencesMany #}
+{% for name, config in config_class.referencesMany %}
+        $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
+        foreach ($document->get{{ name|ucfirst }}() as $relation) {
+            $this->addResource('{{ name }}', $repository->create($referenced));
+        }
+
+{% endfor %}
+        return parent::getLinks();
+    }
+
+    public function fromDocuments(Array $documents)
+    {
+
+    }
+
+    public function fromRequest(Array $data)
+    {
+{% for name in config_class.fields|keys %}
+{% if config_class.fields[name].type  == 'date' %}
+        if (isset($data['{{ name }}'])) {
+            $data['{{ name }}'] = $this->types->fromRequest('DateTime', $data['{{ name }}']);
+        }
+{% endif %}
+{% endfor %}
+
+
+{# referencesOne #}
+{% for name in config_class.referencesOne|keys %}
+        if (isset($data['{{ name }}'])) {
+            $data['{{ name }}_reference_field'] = $this->types->fromRequest('MongoId', $data['{{ name }}']);
+            unset($data['{{ name }}']);
+        }
+{% endfor %}
+
+        return $data;
+    }
+

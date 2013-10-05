@@ -2,24 +2,24 @@
 
 namespace Level3\Mongator\Mondator\Extension;
 
-use Mandango\Mondator\Extension as BaseExtension;
+use Camel\CaseTransformer;
+use Camel\Format;
 
+use Mandango\Mondator\Extension;
 use Mandango\Mondator\Definition;
 use Mandango\Mondator\Definition\Method;
 use Mandango\Mondator\Definition\Property;
 use Mandango\Mondator\Output;
+use Mongator\Twig\Mongator as MongatorTwig;
 
-abstract class Extension extends BaseExtension
+class Level3 extends Extension
 {
+    const NAMESPACE_SEPARARTOR = '\\';
+
     protected $output;
 
     protected $outputFactory;
     protected $definitionFactory;
-
-    //To be overriden by subclasses
-    protected $classesNamespace;
-    protected $classesPrefix;
-    protected $classesSuffix;
 
     protected function createOutput()
     {
@@ -29,12 +29,7 @@ abstract class Extension extends BaseExtension
         }
 
         $this->output = new Output($dir);
-    }
-
-    protected function createDefinition()
-    {
-        $class = $this->getTargetClass($this->getClassName());
-        $this->definition = new Definition($class, $this->output);
+        $this->outputOverride = new Output($dir, true);
     }
 
     protected function setup()
@@ -42,12 +37,12 @@ abstract class Extension extends BaseExtension
         $this->addRequiredOption('default_output');
         $this->addRequiredOption('namespace');
         $this->addRequiredOption('models_namespace');
+        $this->addRequiredOption('hub_loader_class');
     }
 
     protected function doClassProcess()
     {
         $this->createOutput();
-        $this->createDefinition();
 
         $this->parseAndCheckFieldsProcess();
         $this->parseAndCheckReferencesProcess();
@@ -55,15 +50,149 @@ abstract class Extension extends BaseExtension
         if (!$this->configClass['isEmbedded']) {
             $this->parseAndCheckRelationsProcess();
         }
+
         $this->checkDataNamesProcess();
-
-
-        if ($this->isCandidate()) {
-            $this->generateClass();
-        }
+        $this->initDefinitionsProcess();
     }
 
-    protected function isCandidate()
+    protected function doPostGlobalProcess()
+    {
+        $this->globalHubProcess();
+    }
+
+    private function createDefinition($class, $parent, $override = false, $template = false)
+    {
+        if ($override) $output = $this->outputOverride;
+        else $output = $this->output;
+
+        $definition = new Definition($class, $output);
+        $definition->setParentClass('\\'.$parent);
+        $definition->setDocComment(<<<EOF
+/**
+ * {$class} document.
+ */
+EOF
+        );
+
+        if ($template) {
+            $twig = file_get_contents(__DIR__.'/templates/'.$template.'.php.twig');
+            $this->processTemplate($definition, $twig);
+        }
+        
+        return $definition;
+    }
+
+
+    public function getModelClassName($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $model = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . $model;
+    }
+
+    public function getBaseModelClassName($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $model = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model ;
+    }
+
+    public function getResourceClassName($class = null)
+    {
+        return $this->getModelClassName($class) . 'Resource';
+    }
+
+    public function getBaseResourceClassName($class = null)
+    {
+        return $this->getBaseModelClassName($class) . 'Resource';
+    }
+
+    public function getRepositoryClassName($class = null)
+    {
+        return $this->getModelClassName($class) . 'Repository';
+    }
+
+    public function getBaseRepositoryClassName($class = null)
+    {
+        return $this->getBaseModelClassName($class) . 'Repository';
+    }
+
+    public function getReposityKey($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $transformer = new CaseTransformer(new Format\CamelCase, new Format\SnakeCase);
+        $key = str_replace($this->getOption('models_namespace'), '', $class);
+
+        return $transformer->transform($key);
+    }
+
+    private function initDefinitionsProcess()
+    {
+        $classes = array();
+        $classes['resource'] = $this->getResourceClassName();
+        $classes['resource_base'] = $this->getBaseResourceClassName();
+        
+        if ($this->isRepositoryNeeded()) {
+            $classes['repository'] = $this->getRepositoryClassName();
+            $classes['repository_base'] = $this->getBaseRepositoryClassName();
+        }
+
+        $this->configClass['classes'] = $classes;
+
+        $this->configClass['key'] = $this->getReposityKey();
+
+        $this->definitions['resource'] = $this->createDefinition(
+            $classes['resource'], $classes['resource_base']
+        );
+
+        $this->definitions['resource_base'] = $this->createDefinition(
+            $classes['resource_base'], 'Level3\Resource',
+            true, 'Resource'
+        );
+
+        if (!$this->isRepositoryNeeded()) {
+            return;
+        }
+
+        $this->definitions['repository'] = $this->createDefinition(
+            $classes['repository'], $classes['repository_base']
+        );
+
+        $this->definitions['repository_base'] = $this->createDefinition(
+            $classes['repository_base'], 'Level3\Repository',
+            true, 'Repository'
+        );
+
+        $this->definitions['repository_base']->setInterfaces(array(
+            '\Level3\Repository\Getter', 
+            '\Level3\Repository\Finder', 
+            '\Level3\Repository\Putter', 
+            '\Level3\Repository\Poster',
+            '\Level3\Repository\Patcher', 
+            '\Level3\Repository\Deleter'
+        ));            
+    }
+
+    private function globalHubProcess()
+    {
+        $this->definitions['hub'] = $this->createDefinition(
+            $this->getOption('hub_loader_class'), 'Level3\Hub',
+            true, 'Hub'
+        );
+    }
+
+    protected function isRepositoryNeeded()
     {
         if (!isset($this->configClass['isEmbedded'])) {
             return true;
@@ -78,19 +207,6 @@ abstract class Extension extends BaseExtension
         }
         
         return false;
-    }
-
-    protected abstract function generateClass();
-
-    protected function getTargetClass($className)
-    {
-        return $this->getOption('namespace') .
-        '\\' .
-        $this->classesNamespace .
-        '\\' .
-        $this->classesPrefix .
-        $className .
-        $this->classesSuffix;
     }
 
     protected function getClassName($className = null)
@@ -287,5 +403,10 @@ abstract class Extension extends BaseExtension
         } else {
             throw new \RuntimeException(sprintf('The association "%s" of the class "%s" does not have class and it is not polymorphic.', $name, $this->class));
         }
+    }
+
+    protected function configureTwig(\Twig_Environment $twig)
+    {
+        $twig->addExtension(new MongatorTwig());
     }
 }
