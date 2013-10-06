@@ -11,17 +11,21 @@
 
 namespace Level3\Mongator\Tests;
 use Rest\ArticleRepository;
+use Mockery as m;
 
 class RepositoryTest extends TestCase
 {
     const VALID_MONGO_ID = '4af9f23d8ead0e1d32000000';
+    const EXAMPLE_URI = 'foo/bar';
 
     protected function getRepository()
     {
+        $mongoId = new \MongoId('4af9f23d8ead0e1d32000000');
+
         $this->document = $this->createDocumentMock();
         $this->document->shouldReceive('getId')->withNoArgs()
             ->once()
-            ->andReturn(new \MongoId('4af9f23d8ead0e1d32000000'));
+            ->andReturn($mongoId);
         
         $this->docRepository = $this->createDocumentRepositoryMock();
         $this->docRepository
@@ -41,16 +45,25 @@ class RepositoryTest extends TestCase
 
         return new ArticleRepository($this->level3, $this->mongator);
     }
+
+    protected function level3ShouldReceiveGetURI()
+    {
+        $this->level3->shouldReceive('getURI')
+            ->with(null, null, m::type('Level3\Resource\Parameters'))->once()
+            ->andReturn(self::EXAMPLE_URI);
+    }
     
     public function testGet()
     {
-        $atributes = $this->createParametersMock();
-        $atributes
+        $attributes = $this->createParametersMock();
+        $attributes
             ->shouldReceive('get')->with('id')
             ->andReturn(self::VALID_MONGO_ID);
 
         $repository = $this->getRepository();
-        $resource = $repository->get($atributes);
+        $this->level3ShouldReceiveGetURI();
+        
+        $resource = $repository->get($attributes);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
     }
@@ -61,6 +74,7 @@ class RepositoryTest extends TestCase
         $data = array('foo' => 'bar');
 
         $repository = $this->getRepository();
+        $this->level3ShouldReceiveGetURI();
 
         $this->docRepository
             ->shouldReceive('create')->withNoArgs()->once()
@@ -92,6 +106,7 @@ class RepositoryTest extends TestCase
 
         $document = $this->createDocumentMock();
         $repository = $this->getRepository();
+        $this->level3ShouldReceiveGetURI();
 
         $this->docRepository
             ->shouldReceive('create')->withNoArgs()->once()
@@ -134,6 +149,7 @@ class RepositoryTest extends TestCase
         $data['id'] = $mongoId;
 
         $repository = $this->getRepository();
+        $this->level3ShouldReceiveGetURI();
 
         $this->document
             ->shouldReceive('fromArray')->with($expectedData)->once()
@@ -156,6 +172,7 @@ class RepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $repository = $this->getRepository();
+        $this->level3ShouldReceiveGetURI();
 
         $this->docRepository
             ->shouldReceive('delete')->with($this->document)->once()
