@@ -15,6 +15,9 @@ use Mongator\Connection;
 use Mongator\Mongator;
 use Mockery as m;
 
+use Faker\Factory as FakerFactory;
+use Mongator\Factory\Factory as MongatorFactory;
+
 class TestCase extends \PHPUnit_Framework_TestCase
 {
     protected static $staticConnection;
@@ -31,6 +34,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected $cache;
     protected $mongo;
     protected $db;
+
+    protected $factory;
+    protected $faker;
 
     protected function setUp()
     {
@@ -61,11 +67,29 @@ class TestCase extends \PHPUnit_Framework_TestCase
         foreach ($this->db->listCollections() as $collection) {
             $collection->drop();
         }
+
+        $this->makeFactory();
+    }
+
+    private function makeFactory()
+    {
+        $this->factory = new MongatorFactory($this->mongator, FakerFactory::create());
+        $this->defineFactoryDefaults();
+    }
+
+    private function defineFactoryDefaults()
+    {
+ 
     }
 
     protected function createLevel3Mock()
     {
         return m::mock('Level3\Level3');
+    }
+
+    protected function createHubMock()
+    {
+        return m::mock('Level3\Hub');
     }
 
     protected function createMongatorMock()

@@ -22,11 +22,10 @@ class RepositoryTest extends TestCase
     {
         $mongoId = new \MongoId('4af9f23d8ead0e1d32000000');
 
-        $this->document = $this->createDocumentMock();
-        $this->document->shouldReceive('getId')->withNoArgs()
-            ->once()
-            ->andReturn($mongoId);
-        
+        $this->document = $this->factory->quick('Model\Article', array(
+            'id' => $mongoId
+        ));
+
         $this->docRepository = $this->createDocumentRepositoryMock();
         $this->docRepository
             ->shouldReceive('findById')->with(array(self::VALID_MONGO_ID))
@@ -41,7 +40,12 @@ class RepositoryTest extends TestCase
             ->shouldReceive('getRepository')->with('Model\Article')
             ->andReturn($this->docRepository);
 
+        $this->hub = $this->createHubMock();
+        $this->hub->shouldReceive('get');
+
         $this->level3 = $this->createLevel3Mock();
+        $this->level3->shouldReceive('getHub')->withNoArgs()
+            ->andReturn($this->hub);
 
         return new ArticleRepository($this->level3, $this->mongator);
     }
@@ -76,15 +80,20 @@ class RepositoryTest extends TestCase
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
 
+        $document = $this->createDocumentMock();
+        $document->shouldReceive('getId')->withNoArgs()
+            ->once()
+            ->andReturn(new \MongoId(self::VALID_MONGO_ID));
+
         $this->docRepository
             ->shouldReceive('create')->withNoArgs()->once()
             ->andReturn($this->document);
 
-        $this->document
+        $document
             ->shouldReceive('fromArray')->with($data)->once()
             ->andReturn(null);
 
-        $this->document
+        $document
             ->shouldReceive('save')->withNoArgs()->once()
             ->andReturn(null);
 
@@ -104,7 +113,8 @@ class RepositoryTest extends TestCase
         $expectedData = $data = array('foo' => 'bar');
         $expectedData['id'] = $mongoId;
 
-        $document = $this->createDocumentMock();
+        $document = $this->factory->quick('Model\Article', array(), false);
+
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
 
@@ -112,29 +122,10 @@ class RepositoryTest extends TestCase
             ->shouldReceive('create')->withNoArgs()->once()
             ->andReturn($document);
 
-        $this->document
-            ->shouldReceive('getId')->withNoArgs()->once()
-            ->andReturn($mongoId);
-
-        $document
-            ->shouldReceive('getId')->withNoArgs()->once()
-            ->andReturn($mongoId);
-            
-        $document
-            ->shouldReceive('fromArray')->with($expectedData)->once()
-            ->andReturn(null);
-
-        $document
-            ->shouldReceive('setIsNew')->with(false)->once()
-            ->andReturn(null);
-
-        $document
-            ->shouldReceive('save')->withNoArgs()->once()
-            ->andReturn(null);
-
         $resource = $repository->put($atributes, $data);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
+        $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
     }
 
     public function testPatch()
@@ -150,14 +141,6 @@ class RepositoryTest extends TestCase
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
-
-        $this->document
-            ->shouldReceive('fromArray')->with($expectedData)->once()
-            ->andReturn(null);
-
-        $this->document
-            ->shouldReceive('save')->withNoArgs()->once()
-            ->andReturn(null);
 
         $resource = $repository->patch($atributes, $data);
 

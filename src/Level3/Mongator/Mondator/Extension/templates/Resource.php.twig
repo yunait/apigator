@@ -26,8 +26,10 @@
 {% for name, config in config_class.fields %}
 {% if extension.hasType(config.type) %}
 
-        ${{ config.type }} = $document->get{{name|ucfirst}}();
-        $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }}
+        $data['{{ name }}'] = ${{ config.type }} = $document->get{{name|ucfirst}}();
+        if (${{ config.type }}) {
+            $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }}
+        }
 
 {% else %}
         $data['{{ name }}'] = $document->get{{name|ucfirst}}();
@@ -82,7 +84,7 @@
 
     protected function getRepository($repositoryKey)
     {
-        return $this->repository->getLevel3()->getHub()->get($repositoryKey);
+        return $this->level3->getHub()->get($repositoryKey);
     }
 
     public function fromDocuments(Array $documents)

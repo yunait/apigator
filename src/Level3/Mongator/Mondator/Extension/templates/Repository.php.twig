@@ -17,7 +17,7 @@
         $result = $chunk->getResult($query);
 
         $resource = new \{{config_class.classes.resource}}($this->level3);
-        $resource->fromDocument($result->getData());
+        $resource->fromDocuments($result->getData());
 
         return $resource;
     }
