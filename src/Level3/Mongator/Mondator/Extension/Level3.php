@@ -12,6 +12,8 @@ use Mandango\Mondator\Definition\Property;
 use Mandango\Mondator\Output;
 use Mongator\Twig\Mongator as MongatorTwig;
 
+use Level3\Mongator\Mondator\Extension\Type;
+
 class Level3 extends Extension
 {
     const NAMESPACE_SEPARARTOR = '\\';
@@ -32,8 +34,17 @@ class Level3 extends Extension
         $this->outputOverride = new Output($dir, true);
     }
 
+    protected function createTypes()
+    {
+        $this->types = new Types();
+        $this->types->register(new Type\DateTime());
+        $this->types->register(new Type\MongoId());
+    }
+
     protected function setup()
     {
+        $this->createTypes();
+
         $this->addRequiredOption('default_output');
         $this->addRequiredOption('namespace');
         $this->addRequiredOption('models_namespace');
@@ -82,6 +93,20 @@ EOF
         return $definition;
     }
 
+    public function hasType($typeName)
+    {
+        return $this->types->has($typeName);
+    }
+
+    public function getTypeToResponse($typeName)
+    {
+        return $this->types->toResponse($typeName);
+    }
+
+    public function getTypeFromResponse($typeName)
+    {
+        return $this->types->fromRequest($typeName);
+    }
 
     public function getModelClassName($class = null)
     {
@@ -192,17 +217,23 @@ EOF
         );
     }
 
-    protected function isRepositoryNeeded()
+    public function isRepositoryNeeded($class = null)
     {
-        if (!isset($this->configClass['isEmbedded'])) {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $config = $this->configClasses[$class];
+
+        if (!isset($config['isEmbedded'])) {
             return true;
         }
 
-        if (!$this->configClass['isEmbedded']) {
+        if (!$config['isEmbedded']) {
             return true;
         }
 
-        if (isset($this->configClass['fields']['id'])) {
+        if (isset($config['fields']['id'])) {
             return true;
         }
         

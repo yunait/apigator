@@ -8,25 +8,6 @@
         $this->mongator = $mongator;
     }
 
-    public function getDocumentURI(\{{ class }} $document)
-    {
-        $attributes = new \Level3\Resource\Parameters(array(
-            'id' => (string) $document->getId()
-        ));
-
-        return $this->getURI($attributes);
-    }
-
-    public function createDocumentResource(\{{ class }} $document)
-    {
-        $uri = $this->getDocumentURI($document);
-
-        $resource = new \{{config_class.classes.resource}}($this);
-        $resource->setURI($uri);
-    
-        return $resource;
-    }
-
     public function find(\Level3\Resource\Parameters $attributes, \Level3\Resource\Parameters $filters)
     {
         $query = $this->getDocumentRepository()->createQuery();
@@ -35,8 +16,8 @@
         $chunk = $this->getChunk($filters);
         $result = $chunk->getResult($query);
 
-        $resource = new \{{config_class.classes.resource}}($this);
-        $resource->fromDocuments($result->getData());
+        $resource = new \{{config_class.classes.resource}}($this->level3);
+        $resource->fromDocument($result->getData());
 
         return $resource;
     }
@@ -145,6 +126,26 @@
     protected function getDocumentRepository()
     {
         return $this->mongator->getRepository('{{ class }}');
+    }
+
+    public function getDocumentURI(\{{ class }} $document)
+    {
+        $attributes = new \Level3\Resource\Parameters(array(
+            'id' => (string) $document->getId()
+        ));
+
+        return $this->getURI($attributes);
+    }
+
+    public function createDocumentResource(\{{ class }} $document)
+    {
+        $uri = $this->getDocumentURI($document);
+
+        $resource = new \{{config_class.classes.resource}}($this->level3);
+        $resource->setURI($uri);
+        $resource->fromDocument($document);
+
+        return $resource;
     }
 
     protected function castStringToMongoId($id)

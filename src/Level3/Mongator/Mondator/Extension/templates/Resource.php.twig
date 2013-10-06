@@ -1,55 +1,69 @@
 <?php
     protected $document;
+    protected $level3;
 
-    public function setDocument(\Mongator\Document\Document $document)
+    public function __construct(\Level3\Level3 $level3)
     {
-        $this->document = $document;
+        $this->level3 = $level3;
     }
 
-    public function getData()
+    public function fromDocument(\{{ class }} $document)
     {
-        $document = $this->document;
+        $this->setDataFromDocument($document);
+        $this->setResourcesFromDocument($document);
+        $this->setLinksFromDocument($document);
+    }
 
+    protected function setDataFromDocument(\{{ class }} $document)
+    {
         $data = array();
 
 {# fields #}
-        $data['id'] = (string) $document->getId();
-{% for name in config_class.fields|keys %}
-        $data['{{ name }}'] = $this->types->toResponse($document->get{{name|ucfirst}}());
+        $mongoId = (string) $document->getId();
+        $data['id'] = {{ extension.getTypeToResponse('MongoId') }}
+
+
+{% for name, config in config_class.fields %}
+{% if extension.hasType(config.type) %}
+
+        ${{ config.type }} = $document->get{{name|ucfirst}}();
+        $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }}
+
+{% else %}
+        $data['{{ name }}'] = $document->get{{name|ucfirst}}();
+{% endif %}
 {% endfor %}
 
+        $this->setData($data);
+    }
+    
+    protected function setResourcesFromDocument(\{{ class }} $document)
+    {
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
         if (${{ name }} = $document->get{{ name|ucfirst }}()) {
-            $data['{{ name }}'] = new {{ extension.getResourceClassName(config.class) }}(${{ name }});
+            $this->addResource('{{ name }}', $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }}));
         }
 
 {% endfor %}
 {# embeddedsMany #}
 {% for name, config in config_class.embeddedsMany %}
         foreach($document->get{{ name|ucfirst }}() as $embedded) {
-            $data['{{ name }}'][] = new {{ extension.getResourceClassName(config.class) }}($embedded);
+            $this->addResource('{{ name }}', $this->create{{ name|ucfirst }}EmbeddedResource($embedded));
         }
 
 {% endfor %}
-        $this->setData($data);
-
-        return parent::getData();
-    }
-    
-    protected function getRepository($repositoryKey)
-    {
-        return $this->repository->getLevel3()->getHub()->get($repositoryKey);
     }
 
-    public function getLinks()
+    protected function setLinksFromDocument(\{{ class }} $document)
     {
 {# referencesOne #}
 {% for name, config in config_class.referencesOne %}
         $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
-            $this->addResource('{{ name }}', $repository->create($referenced));
+            $uri = $this->getRepository('{{ extension.getReposityKey(name) }}')->getDocumentURI($referenced);
+            $link = new \Level3\Resource\Link($uri);
+            $this->addLink('{{ name }}', $link);
         }
 
 {% endfor %}
@@ -57,11 +71,18 @@
 {% for name, config in config_class.referencesMany %}
         $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
         foreach ($document->get{{ name|ucfirst }}() as $relation) {
-            $this->addResource('{{ name }}', $repository->create($referenced));
+            $uri = $repository->getDocumentURI($referenced);
+            $link = new \Level3\Resource\Link($uri);
+            $this->addLink('{{ name }}', $link);
         }
 
 {% endfor %}
-        return parent::getLinks();
+    }
+
+
+    protected function getRepository($repositoryKey)
+    {
+        return $this->repository->getLevel3()->getHub()->get($repositoryKey);
     }
 
     public function fromDocuments(Array $documents)
@@ -90,4 +111,23 @@
 
         return $data;
     }
+
+
+{% set embeddeds = config_class.embeddedsOne|merge(config_class.embeddedsMany) %}
+
+{% for name, config in embeddeds %}
+    protected function create{{ name|ucfirst }}EmbeddedResource(\{{ config.class }} $document)
+    {
+{% if extension.isRepositoryNeeded(config.class) %}
+        $repository = $this->level3->getHub()->get('{{ extension.getReposityKey(config.class)}}');
+        $resource = $repository->createDocumentResource($document);
+{% else %}
+        $resource = new \{{ extension.getResourceClassName(config.class) }}($this->level3);
+        $resource->setDocument($document);
+{% endif %}
+
+        return $resource;
+    }
+
+{% endfor %}
 

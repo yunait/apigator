@@ -122,6 +122,7 @@ return array(
     'Model\Source' => array(
         'isEmbedded' => true,
         'fields' => array(
+            'id' => 'string',
             'name' => 'string',
             'text' => 'string',
             'note' => 'string',

@@ -30,6 +30,9 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
             $this->fieldsModified = array();
         }
 
+        if (isset($data['id'])) {
+            $this->data['fields']['id'] = (string) $data['id'];
+        }
         if (isset($data['name'])) {
             $this->data['fields']['name'] = (string) $data['name'];
         }
@@ -61,6 +64,80 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
         }
 
         return $this;
+    }
+
+    /**
+     * Set the "id" field.
+     *
+     * @param mixed $value The value.
+     *
+     * @return \Model\Source The document (fluent interface).
+     */
+    public function setId($value)
+    {
+        if (!isset($this->data['fields']['id'])) {
+            if (($rap = $this->getRootAndPath()) && !$rap['root']->isNew()) {
+                $this->getId();
+                if (
+                    ( is_object($value) && $value == $this->data['fields']['id'] ) ||
+                    ( !is_object($value) && $value === $this->data['fields']['id'] )
+                ) {
+                    return $this;
+                }
+            } else {
+                if (null === $value) {
+                    return $this;
+                }
+                $this->fieldsModified['id'] = null;
+                $this->data['fields']['id'] = $value;
+                return $this;
+            }
+        } elseif (
+            ( is_object($value) && $value == $this->data['fields']['id'] ) ||
+            ( !is_object($value) && $value === $this->data['fields']['id'] )
+        ) {
+            return $this;
+        }
+
+        if (!isset($this->fieldsModified['id']) && !array_key_exists('id', $this->fieldsModified)) {
+            $this->fieldsModified['id'] = $this->data['fields']['id'];
+        } elseif (
+            ( is_object($value) && $value == $this->fieldsModified['id'] ) ||
+            ( !is_object($value) && $value === $this->fieldsModified['id'] )
+        ) {
+            unset($this->fieldsModified['id']);
+        }
+
+        $this->data['fields']['id'] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Returns the "id" field.
+     *
+     * @return mixed The $name field.
+     */
+    public function getId()
+    {
+        $rap = $this->getRootAndPath();
+        $new = $this->isEmbeddedManyNew();
+        if ( $rap && !$new ) {
+            $field = $rap['path'].'.id';
+            $rap['root']->addFieldCache($field);
+        }
+
+        if (!isset($this->data['fields']['id']) &&
+            !$this->isFieldInQuery('id'))
+        {
+            $this->loadFull();
+        }
+        // Still not set? It can only be null
+        if (!isset($this->data['fields']['id'])) {
+            $this->data['fields']['id'] = null;
+        }
+
+        return $this->data['fields']['id'];
     }
 
     /**
@@ -819,6 +896,9 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
      */
     public function set($name, $value)
     {
+        if ('id' == $name) {
+            return $this->setId($value);
+        }
         if ('name' == $name) {
             return $this->setName($value);
         }
@@ -861,6 +941,9 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
      */
     public function get($name)
     {
+        if ('id' == $name) {
+            return $this->getId();
+        }
         if ('name' == $name) {
             return $this->getName();
         }
@@ -904,6 +987,9 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
      */
     public function fromArray(array $array)
     {
+        if (isset($array['id'])) {
+            $this->setId($array['id']);
+        }
         if (isset($array['name'])) {
             $this->setName($array['name']);
         }
@@ -951,6 +1037,7 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
     public function toArray($withReferenceFields = false)
     {
         $array = array();
+        $array['id'] = $this->getId();
         $array['name'] = $this->getName();
         $array['text'] = $this->getText();
         $array['note'] = $this->getNote();
@@ -1001,6 +1088,9 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
                     }
                     $query =& $query[$name];
                 }
+                if (isset($this->data['fields']['id'])) {
+                    $query['id'] = (string) $this->data['fields']['id'];
+                }
                 if (isset($this->data['fields']['name'])) {
                     $query['name'] = (string) $this->data['fields']['name'];
                 }
@@ -1026,6 +1116,17 @@ abstract class Source extends \Mongator\Document\EmbeddedDocument
                 $query = $rootQuery;
             } else {
                 $documentPath = $rap['path'];
+                if (isset($this->data['fields']['id']) || array_key_exists('id', $this->data['fields'])) {
+                    $value = $this->data['fields']['id'];
+                    $originalValue = $this->getOriginalFieldValue('id');
+                    if ($value !== $originalValue) {
+                        if (null !== $value) {
+                            $query['$set'][$documentPath.'.id'] = (string) $this->data['fields']['id'];
+                        } else {
+                            $query['$unset'][$documentPath.'.id'] = 1;
+                        }
+                    }
+                }
                 if (isset($this->data['fields']['name']) || array_key_exists('name', $this->data['fields'])) {
                     $value = $this->data['fields']['name'];
                     $originalValue = $this->getOriginalFieldValue('name');

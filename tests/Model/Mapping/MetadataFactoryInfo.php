@@ -651,6 +651,10 @@ class MetadataFactoryInfo
             'inheritable' => false,
             'inheritance' => false,
             'fields' => array(
+                'id' => array(
+                    'type' => 'string',
+                    'dbName' => 'id',
+                ),
                 'name' => array(
                     'type' => 'string',
                     'dbName' => 'name',
