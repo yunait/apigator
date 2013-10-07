@@ -19,11 +19,13 @@
         $data = array();
 
 {# fields #}
+{% if extension.isRepositoryNeeded(class) %}
         $mongoId = (string) $document->getId();
         $data['id'] = {{ extension.getTypeToResponse('MongoId') }}
 
-
+{% endif %}
 {% for name, config in config_class.fields %}
+{% if 'referenceField' not in config|keys %}
 {% if extension.hasType(config.type) %}
 
         $data['{{ name }}'] = ${{ config.type }} = $document->get{{name|ucfirst}}();
@@ -33,6 +35,7 @@
 
 {% else %}
         $data['{{ name }}'] = $document->get{{name|ucfirst}}();
+{% endif %}
 {% endif %}
 {% endfor %}
 
@@ -72,7 +75,7 @@
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
         $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
-        foreach ($document->get{{ name|ucfirst }}() as $relation) {
+        foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $this->addLink('{{ name }}', $link);
@@ -125,7 +128,7 @@
         $resource = $repository->createDocumentResource($document);
 {% else %}
         $resource = new \{{ extension.getResourceClassName(config.class) }}($this->level3);
-        $resource->setDocument($document);
+        $resource->fromDocument($document);
 {% endif %}
 
         return $resource;

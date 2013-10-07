@@ -77,10 +77,13 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->defineFactoryDefaults();
     }
 
-    private function defineFactoryDefaults()
+    protected function defineFactoryDefaults()
     {
         $this->factory->define('Article', 'Model\Article', array(
-            'title', 'content', 'note', 'line', 'text', 'isActive', 'date'
+            'title', 'content', 'note', 'line', 'text', 'isActive', 'date',
+            'source' => array(
+                'name', 'text'
+            )
         ));
     }
 
@@ -92,6 +95,21 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected function createHubMock()
     {
         return m::mock('Level3\Hub');
+    }
+
+    protected function createRepositoryMock()
+    {
+        return m::mock('Level3\Repository');
+    }
+
+    protected function createResourceMock()
+    {
+        return m::mock('Level3\Resource');
+    }
+
+    protected function createParametersMock()
+    {
+        return m::mock('Level3\Resource\Parameters');
     }
 
     protected function createMongatorMock()
@@ -112,10 +130,5 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected function createDocumentMock()
     {
         return m::mock('Model\Article');
-    }
-
-    protected function createParametersMock()
-    {
-        return m::mock('Level3\Resource\Parameters');
     }
 }
