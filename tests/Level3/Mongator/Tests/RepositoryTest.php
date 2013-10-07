@@ -10,6 +10,7 @@
  */
 
 namespace Level3\Mongator\Tests;
+
 use Rest\ArticleRepository;
 use Mockery as m;
 

@@ -10,11 +10,11 @@ class DateTime extends Type
 
     public function fromRequest()
     {
-        return 'NativeDateTime::createFromFormat(NativeDateTime::ISO8601, $isoDate);';
+        return 'NativeDateTime::createFromFormat(\DateTime::ISO8601, $isoDate);';
     }
 
     public function toResponse()
     {
-        return '$date->format(NativeDateTime::ISO8601);';
+        return '$date->format(\DateTime::ISO8601);';
     }
 }

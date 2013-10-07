@@ -14,6 +14,7 @@ return array(
             'date'     => 'date',
             'database' => array('dbName' => 'basatos', 'type' => 'string'),
         ),
+
         'embeddedsOne' => array(
             'source'          => array('class' => 'Model\Source'),
             'simpleEmbedded' => array('class' => 'Model\SimpleEmbedded'),
