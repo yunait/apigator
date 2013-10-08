@@ -202,7 +202,11 @@ class RepositoryTest extends TestCase
 
         $query
             ->shouldReceive('all')->withNoArgs()->once()
-            ->andReturn(array());
+            ->andReturn(array(
+                $this->factory->create('Article'),
+                $this->factory->create('Article'),
+                $this->factory->create('Article')
+            ));
 
         $this->docRepository
             ->shouldReceive('createQuery')->withNoArgs()->once()
@@ -212,5 +216,9 @@ class RepositoryTest extends TestCase
         $resource = $repository->find($atributes, $filters);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
+
+        $resources = $resource->getResources();
+        $this->assertCount(3, $resources);
+        $this->assertCount(1, $resources['article']);
     }
 }

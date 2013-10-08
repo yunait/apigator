@@ -14,6 +14,17 @@
         $this->setLinksFromDocument($document);
     }
 
+
+    public function fromDocuments(Array $documents)
+    {
+        $repository = $this->level3->getHub()->get('{{ extension.getReposityKey(class)}}');
+        foreach ($documents as $document) {
+            $resource = $repository->createDocumentResource($document);  
+            $this->addResource('{{ config_class.key }}', $resource);
+        }
+    }
+
+
     protected function setDataFromDocument(\{{ class }} $document)
     {
         $data = array();
@@ -88,11 +99,6 @@
     protected function getRepository($repositoryKey)
     {
         return $this->level3->getHub()->get($repositoryKey);
-    }
-
-    public function fromDocuments(Array $documents)
-    {
-
     }
 
     public function fromRequest(Array $data)
