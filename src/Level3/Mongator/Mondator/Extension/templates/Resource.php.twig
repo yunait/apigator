@@ -14,7 +14,6 @@
         $this->setLinksFromDocument($document);
     }
 
-
     public function fromDocuments(Array $documents)
     {
         $repository = $this->level3->getHub()->get('{{ extension.getReposityKey(class)}}');
@@ -23,7 +22,6 @@
             $this->addResource('{{ config_class.key }}', $resource);
         }
     }
-
 
     protected function setDataFromDocument(\{{ class }} $document)
     {
@@ -111,7 +109,6 @@
 {% endif %}
 {% endfor %}
 
-
 {# referencesOne #}
 {% for name in config_class.referencesOne|keys %}
         if (isset($data['{{ name }}'])) {
@@ -123,9 +120,7 @@
         return $data;
     }
 
-
 {% set embeddeds = config_class.embeddedsOne|merge(config_class.embeddedsMany) %}
-
 {% for name, config in embeddeds %}
     protected function create{{ name|ucfirst }}EmbeddedResource(\{{ config.class }} $document)
     {
@@ -141,4 +136,3 @@
     }
 
 {% endfor %}
-
