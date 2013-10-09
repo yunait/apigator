@@ -6,7 +6,7 @@ use Level3\Mongator\Mondator\Extension\Type\Type;
 
 class Types
 {
-    private $types = [];
+    private $types = array();
 
     public function register(Type $type)
     {
