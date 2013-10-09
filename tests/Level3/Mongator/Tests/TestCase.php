@@ -81,9 +81,6 @@ class TestCase extends \PHPUnit_Framework_TestCase
     {
         $this->factory->define('Article', 'Model\Article', array(
             'title', 'content', 'note', 'line', 'text', 'isActive', 'date',
-            'source' => array(
-                'name', 'text'
-            )
         ));
     }
 

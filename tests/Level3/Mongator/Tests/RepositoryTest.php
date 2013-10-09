@@ -41,14 +41,18 @@ class RepositoryTest extends TestCase
             ->shouldReceive('getRepository')->with('Model\Article')
             ->andReturn($this->docRepository);
 
-        $this->hub = $this->createHubMock();
-        $this->hub->shouldReceive('get');
-
         $this->level3 = $this->createLevel3Mock();
+
+        $repository = new ArticleRepository($this->level3, $this->mongator);
+
+        $this->hub = $this->createHubMock();
+        $this->hub->shouldReceive('get')
+            ->andReturn($repository);
+
         $this->level3->shouldReceive('getHub')->withNoArgs()
             ->andReturn($this->hub);
 
-        return new ArticleRepository($this->level3, $this->mongator);
+        return $repository;
     }
 
     protected function level3ShouldReceiveGetURI()
@@ -208,17 +212,22 @@ class RepositoryTest extends TestCase
                 $this->factory->create('Article')
             ));
 
+        $this->level3->shouldReceive('getURI')
+            ->andReturn('foo');
+
         $this->docRepository
             ->shouldReceive('createQuery')->withNoArgs()->once()
             ->andReturn($query);
- 
 
         $resource = $repository->find($atributes, $filters);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
 
         $resources = $resource->getResources();
-        $this->assertCount(3, $resources);
-        $this->assertCount(1, $resources['article']);
+        $this->assertCount(1, $resources);
+        $this->assertCount(3, $resources['article']);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][0]);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][1]);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][2]);
     }
 }
