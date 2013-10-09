@@ -16,7 +16,7 @@
 
     public function fromDocuments(Array $documents)
     {
-        $repository = $this->level3->getHub()->get('{{ extension.getReposityKey(class)}}');
+        $repository = $this->level3->getHub()->get('{{ extension.getRepositoryKey(class)}}');
         foreach ($documents as $document) {
             $resource = $repository->createDocumentResource($document);  
             $this->addResource('{{ config_class.key }}', $resource);
@@ -75,7 +75,7 @@
 {% for name, config in config_class.referencesOne %}
         $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $uri = $this->getRepository('{{ extension.getReposityKey(name) }}')->getDocumentURI($referenced);
+            $uri = $this->getRepository('{{ extension.getRepositoryKey(name) }}')->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $this->addLink('{{ name }}', $link);
         }
@@ -83,7 +83,7 @@
 {% endfor %}
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
-        $repository = $this->getRepository('{{ extension.getReposityKey(name) }}');
+        $repository = $this->getRepository('{{ extension.getRepositoryKey(name) }}');
         foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
@@ -92,7 +92,6 @@
 
 {% endfor %}
     }
-
 
     protected function getRepository($repositoryKey)
     {
@@ -125,7 +124,7 @@
     protected function create{{ name|ucfirst }}EmbeddedResource(\{{ config.class }} $document)
     {
 {% if extension.isRepositoryNeeded(config.class) %}
-        $repository = $this->level3->getHub()->get('{{ extension.getReposityKey(config.class)}}');
+        $repository = $this->level3->getHub()->get('{{ extension.getRepositoryKey(config.class)}}');
         $resource = $repository->createDocumentResource($document);
 {% else %}
         $resource = new \{{ extension.getResourceClassName(config.class) }}($this->level3);

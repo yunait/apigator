@@ -10,14 +10,12 @@
 
     public function registerDefinitions()
     {
-{% for class, config in config_classes %}
-{% if 'repository' in config.classes|keys %}
+{% for key, class in extension.getMapping() %}
         $this->level3->getHub()->registerDefinition(
-            '{{ config.key }}', 
+            '{{ key }}', 
             $this->get{{ class|replace({'\\': ''}) }}Repository()
         ); 
 
-{% endif %}
 {% endfor %} 
     }
 

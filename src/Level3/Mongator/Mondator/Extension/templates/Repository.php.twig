@@ -115,12 +115,28 @@
     {
         $id = $this->castStringToMongoId($parameters->get('id'));
 
-        $result = $this->getDocumentRepository()->findById(array($id))->one();
-        if ($result) {
-            return $result;
+        $document = $this->getDocumentRepository()->findById(array($id))->one();
+
+{% if config_class.isEmbedded %}
+        $method = sprintf('get%s', ucfirst($this->getKey()));
+        $group = $document->$method();
+
+        if (count($group) != 0) {
+            foreach ($group as $embedded) {
+                if ((string) $embedded->getId() == $parameters->get('embeddedId')) {
+                    return $embedded;
+                }
+            }
+        } 
+
+        throw new Exceptions\NotFound();
+{% else %}
+        if ($document) {
+            return $document;
         } else {
             throw new \Level3\Exceptions\NotFound();
         }
+{% endif %}
     }
 
     protected function getDocumentRepository()

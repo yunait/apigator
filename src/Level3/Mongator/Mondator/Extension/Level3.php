@@ -22,6 +22,7 @@ class Level3 extends Extension
 
     protected $outputFactory;
     protected $definitionFactory;
+    protected $mapping = array();
 
     protected function createOutput()
     {
@@ -130,6 +131,11 @@ EOF
         return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . 'Base' . self::NAMESPACE_SEPARARTOR . $model ;
     }
 
+    public function getMapping()
+    {
+        return $this->mapping;
+    }
+    
     public function getResourceClassName($class = null)
     {
         return $this->getModelClassName($class) . 'Resource';
@@ -150,7 +156,7 @@ EOF
         return $this->getBaseModelClassName($class) . 'Repository';
     }
 
-    public function getReposityKey($class = null)
+    public function getRepositoryKey($class = null)
     {
         if (!$class) {
             $class = $this->class;
@@ -160,6 +166,21 @@ EOF
         $key = str_replace($this->getOption('models_namespace'), '', $class);
 
         return $transformer->transform($key);
+    }
+
+    private function createMappingFromDocument()
+    {
+        $key = $this->getRepositoryKey();
+        $this->mapping[$key] = $this->class;
+
+        foreach (array_merge(
+            $this->configClass['embeddedsOne'],
+            $this->configClass['embeddedsMany']
+        ) as $name => $embedded) {
+            if ($this->isRepositoryNeeded($embedded['class'])) {
+                $this->mapping[$key . '/' . $name] = $embedded['class'];
+            }
+        }
     }
 
     private function initDefinitionsProcess()
@@ -175,7 +196,7 @@ EOF
 
         $this->configClass['classes'] = $classes;
 
-        $this->configClass['key'] = $this->getReposityKey();
+        $this->configClass['key'] = $this->getRepositoryKey();
 
         $this->definitions['resource'] = $this->createDefinition(
             $classes['resource'], $classes['resource_base']
@@ -207,6 +228,8 @@ EOF
             '\Level3\Repository\Patcher', 
             '\Level3\Repository\Deleter'
         ));            
+
+        $this->createMappingFromDocument();
     }
 
     private function globalHubProcess()
