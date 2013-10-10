@@ -85,6 +85,12 @@ abstract class Article extends \Mongator\Document\Document
             $embedded->setDocumentData($data['simpleEmbedded']);
             $this->data['embeddedsOne']['simpleEmbedded'] = $embedded;
         }
+        if (isset($data['sources'])) {
+            $embedded = new \Mongator\Group\EmbeddedGroup('Model\Source');
+            $embedded->setRootAndPath($this, 'sources');
+            $embedded->setSavedData($data['sources']);
+            $this->data['embeddedsMany']['sources'] = $embedded;
+        }
         if (isset($data['comments'])) {
             $embedded = new \Mongator\Group\EmbeddedGroup('Model\Comment');
             $embedded->setRootAndPath($this, 'comments');
@@ -1036,6 +1042,12 @@ abstract class Article extends \Mongator\Document\Document
         if (isset($this->data['embeddedsOne']['source'])) {
             $this->data['embeddedsOne']['source']->updateReferenceFields();
         }
+        if (isset($this->data['embeddedsMany']['sources'])) {
+            $group = $this->data['embeddedsMany']['sources'];
+            foreach ($group->getSaved() as $document) {
+                $document->updateReferenceFields();
+            }
+        }
         if (isset($this->data['embeddedsMany']['comments'])) {
             $group = $this->data['embeddedsMany']['comments'];
             foreach ($group->getSaved() as $document) {
@@ -1198,6 +1210,49 @@ abstract class Article extends \Mongator\Document\Document
     }
 
     /**
+     * Returns the "sources" embedded many.
+     *
+     * @return \Mongator\Group\EmbeddedGroup The "sources" embedded many.
+     */
+    public function getSources()
+    {
+        if (!isset($this->data['embeddedsMany']['sources'])) {
+            $this->data['embeddedsMany']['sources'] = $embedded = new \Mongator\Group\EmbeddedGroup('Model\Source');
+            $embedded->setRootAndPath($this, 'sources');
+        }
+
+        return $this->data['embeddedsMany']['sources'];
+    }
+
+    /**
+     * Adds documents to the "sources" embeddeds many.
+     *
+     * @param mixed $documents A document or an array or documents.
+     *
+     * @return \Model\Article The document (fluent interface).
+     */
+    public function addSources($documents)
+    {
+        $this->getSources()->add($documents);
+
+        return $this;
+    }
+
+    /**
+     * Removes documents to the "sources" embeddeds many.
+     *
+     * @param mixed $documents A document or an array or documents.
+     *
+     * @return \Model\Article The document (fluent interface).
+     */
+    public function removeSources($documents)
+    {
+        $this->getSources()->remove($documents);
+
+        return $this;
+    }
+
+    /**
      * Returns the "comments" embedded many.
      *
      * @return \Mongator\Group\EmbeddedGroup The "comments" embedded many.
@@ -1267,6 +1322,18 @@ abstract class Article extends \Mongator\Document\Document
         }
         if (isset($this->data['embeddedsOne']['source'])) {
             $this->data['embeddedsOne']['source']->resetGroups();
+        }
+        if (isset($this->data['embeddedsMany']['sources'])) {
+            $group = $this->data['embeddedsMany']['sources'];
+            foreach (array_merge($group->getAdd(), $group->getRemove()) as $document) {
+                $document->resetGroups();
+            }
+            if ($group->isSavedInitialized()) {
+                foreach ($group->getSaved() as $document) {
+                    $document->resetGroups();
+                }
+            }
+            $group->reset();
         }
         if (isset($this->data['embeddedsMany']['comments'])) {
             $group = $this->data['embeddedsMany']['comments'];
@@ -1405,6 +1472,9 @@ abstract class Article extends \Mongator\Document\Document
         if ('simpleEmbedded' == $name) {
             return $this->getSimpleEmbedded();
         }
+        if ('sources' == $name) {
+            return $this->getSources();
+        }
         if ('comments' == $name) {
             return $this->getComments();
         }
@@ -1476,6 +1546,14 @@ abstract class Article extends \Mongator\Document\Document
             $embedded = new \Model\SimpleEmbedded($this->getMongator());
             $embedded->fromArray($array['simpleEmbedded']);
             $this->setSimpleEmbedded($embedded);
+        }
+        if (isset($array['sources'])) {
+            $embeddeds = array();
+            foreach ($array['sources'] as $documentData) {
+                $embeddeds[] = $embedded = new \Model\Source($this->getMongator());
+                $embedded->setDocumentData($documentData);
+            }
+            $this->getSources()->replace($embeddeds);
         }
         if (isset($array['comments'])) {
             $embeddeds = array();
@@ -1715,12 +1793,41 @@ abstract class Article extends \Mongator\Document\Document
         }
         if (isset($this->data['embeddedsMany'])) {
             if ($isNew) {
+                if (isset($this->data['embeddedsMany']['sources'])) {
+                    foreach ($this->data['embeddedsMany']['sources']->getAdd() as $document) {
+                        $query = $document->queryForSave($query, $isNew);
+                    }
+                }
                 if (isset($this->data['embeddedsMany']['comments'])) {
                     foreach ($this->data['embeddedsMany']['comments']->getAdd() as $document) {
                         $query = $document->queryForSave($query, $isNew);
                     }
                 }
             } else {
+                if (isset($this->data['embeddedsMany']['sources'])) {
+                    $group = $this->data['embeddedsMany']['sources'];
+                    $saved = $group->getSaved();
+                    foreach ($saved as $document) {
+                        $query = $document->queryForSave($query, $isNew);
+                    }
+                    $groupRap = $group->getRootAndPath();
+                    foreach ($group->getAdd() as $document) {
+                        $q = $document->queryForSave(array(), true);
+                        $rap = $document->getRootAndPath();
+                        foreach (explode('.', $rap['path']) as $name) {
+                            if (0 === strpos($name, '_add')) {
+                                $name = substr($name, 4);
+                            }
+                            $q = $q[$name];
+                        }
+                        $op = ($saved) ? '$pushAll' : '$set';
+                        $query[$op][$groupRap['path']][] = $q;
+                    }
+                    foreach ($group->getRemove() as $document) {
+                        $rap = $document->getRootAndPath();
+                        $query['$unset'][$rap['path']] = 1;
+                    }
+                }
                 if (isset($this->data['embeddedsMany']['comments'])) {
                     $group = $this->data['embeddedsMany']['comments'];
                     $saved = $group->getSaved();

@@ -124,6 +124,11 @@ class TestCase extends \PHPUnit_Framework_TestCase
         return m::mock('Model\ArticleRepository');
     }
 
+    protected function createEmbeddedDocumentMock()
+    {
+        return m::mock('Model\Source');
+    }
+
     protected function createDocumentMock()
     {
         return m::mock('Model\Article');

@@ -10,14 +10,23 @@
 
     public function find(\Level3\Resource\Parameters $attributes, \Level3\Resource\Parameters $filters)
     {
+{% if config_class.isEmbedded %}
+        $document = $this->getDocument($attributes);
+        $key = explode('/', $this->getKey());
+        $method = sprintf('get%s', ucfirst($key[1]));
+
+        $data = $document->$method()->all();
+{% else %}
         $query = $this->getDocumentRepository()->createQuery();
         $this->applyCriteriaToQuery($query, $filters);
 
         $chunk = $this->getChunk($filters);
         $result = $chunk->getResult($query);
 
+        $data = $result->getData();
+{% endif %}
         $resource = new \{{config_class.classes.resource}}($this->level3);
-        $resource->fromDocuments($result->getData());
+        $resource->fromDocuments($this, $data);
 
         return $resource;
     }
@@ -67,81 +76,159 @@
 
     public function get(\Level3\Resource\Parameters $attributes)
     {
+{% if config_class.isEmbedded %}
+        $document = $this->getEmbeddedDocument($attributes);
+{% else %}
         $document = $this->getDocument($attributes);
+{% endif %}
 
         return $this->createDocumentResource($document);
     }
 
     public function post(\Level3\Resource\Parameters $attributes, Array $data)
     {
-        $document = $this->getDocumentRepository()->create();
+        $document = $this->createDocument($attributes);
         $document->fromArray($data);
+
+{% if config_class.isEmbedded %}
+        $rap = $document->getRootAndPath();
+        $rap['root']->save();
+{% else %}
         $document->save();
+{% endif %}
 
         return $this->createDocumentResource($document);
     }
 
     public function put(\Level3\Resource\Parameters $attributes, Array $data)
     {
+{% if config_class.isEmbedded %}
+        $orignalDocument = $this->getEmbeddedDocument($attributes);
+{% else %}
         $orignalDocument = $this->getDocument($attributes);
+{% endif %}
         $data['id'] = $orignalDocument->getId();
 
-        $document = $this->getDocumentRepository()->create();
+        $document = $this->createDocument($attributes);
         $document->fromArray($data);
+
+{% if config_class.isEmbedded %}
+        $rap = $document->getRootAndPath();
+
+        $key = explode('/', $this->getKey());
+        $deleteMethod = sprintf('add%s', ucfirst($key[1]));
+        $addMethod = sprintf('add%s', ucfirst($key[1]));
+
+        $rap['root']->$deleteMethod($orignalDocument);
+        $rap['root']->$addMethod($document);
+        $rap['root']->save();
+{% else %}
         $document->setIsNew(false);
         $document->save();
+{% endif %}
 
         return $this->createDocumentResource($document);
     }
 
     public function patch(\Level3\Resource\Parameters $attributes, Array $data)
     {
+{% if config_class.isEmbedded %}
+        $document = $this->getEmbeddedDocument($attributes);
+{% else %}
         $document = $this->getDocument($attributes);
+{% endif %}
         unset($data['id']);
         
         $document->fromArray($data);
-        $document->save();    
+{% if config_class.isEmbedded %}
+
+        $rap = $document->getRootAndPath();
+        $rap['root']->save();
+{% else %}
+        $document->save();
+{% endif %}
 
         return $this->createDocumentResource($document);
     }
 
     public function delete(\Level3\Resource\Parameters $attributes)
     {
+{% if config_class.isEmbedded %}
+        $embedded = $this->getEmbeddedDocument($attributes);
+
+        $rap = $embedded->getRootAndPath();
+        $document = $rap['root'];
+
+        $key = explode('/', $this->getKey());
+        $deleteMethod = sprintf('add%s', ucfirst($key[1]));
+        $document->$deleteMethod($embedded);
+        $document->save();
+{% else %}
         $document = $this->getDocument($attributes);
         $this->getDocumentRepository()->delete($document);
+{% endif %}
     }
 
-    protected function getDocument(\Level3\Resource\Parameters $parameters)
+
+    protected function createDocument(\Level3\Resource\Parameters  $attributes)
     {
-        $id = $this->castStringToMongoId($parameters->get('id'));
+{% if config_class.isEmbedded %}
+        $document = $this->getDocument($attributes);
+        $embedded = $this->mongator->create('{{ class }}');
+
+        $key = explode('/', $this->getKey());
+        $addMethod = sprintf('add%s', ucfirst($key[1]));
+        $document->$addMethod($embedded);
+
+        //$embedded->setRootAndPath($document, $key[1]);
+        return $embedded;
+{% else %}
+        return $this->getDocumentRepository()->create();
+{% endif %}
+    }
+
+    protected function getDocument(\Level3\Resource\Parameters $attributes)
+    {
+        $id = $this->castStringToMongoId($attributes->get('id'));
 
         $document = $this->getDocumentRepository()->findById(array($id))->one();
-
-{% if config_class.isEmbedded %}
-        $method = sprintf('get%s', ucfirst($this->getKey()));
-        $group = $document->$method();
-
-        if (count($group) != 0) {
-            foreach ($group as $embedded) {
-                if ((string) $embedded->getId() == $parameters->get('embeddedId')) {
-                    return $embedded;
-                }
-            }
-        } 
-
-        throw new Exceptions\NotFound();
-{% else %}
+        
         if ($document) {
             return $document;
         } else {
             throw new \Level3\Exceptions\NotFound();
         }
-{% endif %}
     }
 
-    protected function getDocumentRepository()
+{% if config_class.isEmbedded %}
+    protected function getEmbeddedDocument(\Level3\Resource\Parameters $attributes)
     {
+        $document = $this->getDocument($attributes);
+
+        $key = explode('/', $this->getKey());
+        $method = sprintf('get%s', ucfirst($key[1]));
+        $group = $document->$method();
+
+        if (count($group) != 0) {
+            foreach ($group as $embedded) {
+                if ((string) $embedded->getId() == $attributes->get('embeddedId')) {
+                    return $embedded;
+                }
+            }
+        } 
+
+        throw new \Level3\Exceptions\NotFound();
+    }
+{% endif %}
+
+    public function getDocumentRepository()
+    {
+{% if config_class.isEmbedded %}
+        $key = explode('/', $this->getKey());
+        return $this->level3->getHub()->get($key[0])->getDocumentRepository();
+{% else %}
         return $this->mongator->getRepository('{{ class }}');
+{% endif %}
     }
 
     public function getDocumentURI(\{{ class }} $document)

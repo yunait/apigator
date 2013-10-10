@@ -14,9 +14,8 @@
         $this->setLinksFromDocument($document);
     }
 
-    public function fromDocuments(Array $documents)
+    public function fromDocuments(\Level3\Repository $repository, Array $documents)
     {
-        $repository = $this->level3->getHub()->get('{{ extension.getRepositoryKey(class)}}');
         foreach ($documents as $document) {
             $resource = $repository->createDocumentResource($document);  
             $this->addResource('{{ config_class.key }}', $resource);

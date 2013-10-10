@@ -92,6 +92,9 @@ class MetadataFactoryInfo
                 ),
             ),
             'embeddedsMany' => array(
+                'sources' => array(
+                    'class' => 'Model\\Source',
+                ),
                 'comments' => array(
                     'class' => 'Model\\Comment',
                 ),
@@ -174,7 +177,7 @@ class MetadataFactoryInfo
                 ),
                 6 => array(
                     'keys' => array(
-                        'comments.line' => 1,
+                        'sources.name' => 1,
                     ),
                     'options' => array(
                         'unique' => true,
@@ -182,11 +185,39 @@ class MetadataFactoryInfo
                 ),
                 7 => array(
                     'keys' => array(
+                        'sources.authorId' => 1,
+                        'sources.line' => 1,
+                    ),
+                ),
+                8 => array(
+                    'keys' => array(
+                        'sources.info.note' => 1,
+                    ),
+                    'options' => array(
+                        'unique' => true,
+                    ),
+                ),
+                9 => array(
+                    'keys' => array(
+                        'sources.info.name' => 1,
+                        'sources.info.line' => 1,
+                    ),
+                ),
+                10 => array(
+                    'keys' => array(
+                        'comments.line' => 1,
+                    ),
+                    'options' => array(
+                        'unique' => true,
+                    ),
+                ),
+                11 => array(
+                    'keys' => array(
                         'comments.authorId' => 1,
                         'comments.note' => 1,
                     ),
                 ),
-                8 => array(
+                12 => array(
                     'keys' => array(
                         'comments.infos.note' => 1,
                     ),
@@ -194,7 +225,7 @@ class MetadataFactoryInfo
                         'unique' => true,
                     ),
                 ),
-                9 => array(
+                13 => array(
                     'keys' => array(
                         'comments.infos.name' => 1,
                         'comments.infos.line' => 1,
