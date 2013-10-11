@@ -164,6 +164,7 @@ EOF
 
         $transformer = new CaseTransformer(new Format\CamelCase, new Format\SnakeCase);
         $key = str_replace($this->getOption('models_namespace'), '', $class);
+        $key = str_replace('\\', '/', $key);
 
         return $transformer->transform($key);
     }
