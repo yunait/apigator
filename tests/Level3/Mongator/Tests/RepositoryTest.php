@@ -44,6 +44,7 @@ class RepositoryTest extends TestCase
         $this->level3 = $this->createLevel3Mock();
 
         $repository = new ArticleRepository($this->level3, $this->mongator);
+        $repository->setKey('article');
 
         $this->hub = $this->createHubMock();
         $this->hub->shouldReceive('get')
@@ -58,7 +59,7 @@ class RepositoryTest extends TestCase
     protected function level3ShouldReceiveGetURI()
     {
         $this->level3->shouldReceive('getURI')
-            ->with(null, null, m::type('Level3\Resource\Parameters'))->once()
+            ->with('article', null, m::type('Level3\Resource\Parameters'))->once()
             ->andReturn(self::EXAMPLE_URI);
     }
     
@@ -66,7 +67,7 @@ class RepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $repository = $this->getRepository();
@@ -111,7 +112,7 @@ class RepositoryTest extends TestCase
     {
         $atributes = $this->createParametersMock();
         $atributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
@@ -137,7 +138,7 @@ class RepositoryTest extends TestCase
     {
         $atributes = $this->createParametersMock();
         $atributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
@@ -156,7 +157,7 @@ class RepositoryTest extends TestCase
     {
         $atributes = $this->createParametersMock();
         $atributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $repository = $this->getRepository();

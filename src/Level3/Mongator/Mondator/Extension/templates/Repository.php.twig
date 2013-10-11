@@ -189,7 +189,8 @@
 
     protected function getDocument(\Level3\Resource\Parameters $attributes)
     {
-        $id = $this->castStringToMongoId($attributes->get('id'));
+        $key = explode('/', $this->getKey());
+        $id = $this->castStringToMongoId($attributes->get($key[0] . 'Id'));
 
         $document = $this->getDocumentRepository()->findById(array($id))->one();
         
@@ -211,7 +212,7 @@
 
         if (count($group) != 0) {
             foreach ($group as $embedded) {
-                if ((string) $embedded->getId() == $attributes->get('embeddedId')) {
+                if ((string) $embedded->getId() == $attributes->get($key[1] . 'Id')) {
                     return $embedded;
                 }
             }

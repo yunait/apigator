@@ -76,10 +76,10 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
         $attributes
-            ->shouldReceive('get')->with('embeddedId')
+            ->shouldReceive('get')->with('sourcesId')
             ->andReturn(self::VALID_MONGO_ID);
 
 
@@ -96,7 +96,7 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
 
         $data = array('name' => 'bar');
@@ -118,10 +118,10 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
         $attributes
-            ->shouldReceive('get')->with('embeddedId')
+            ->shouldReceive('get')->with('sourcesId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
@@ -151,10 +151,10 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
         $attributes
-            ->shouldReceive('get')->with('embeddedId')
+            ->shouldReceive('get')->with('sourcesId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
@@ -176,10 +176,10 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
         $attributes
-            ->shouldReceive('get')->with('embeddedId')
+            ->shouldReceive('get')->with('sourcesId')
             ->andReturn(self::VALID_MONGO_ID);
 
         $repository = $this->getRepository();
@@ -199,7 +199,7 @@ class EmbeddedRepositoryTest extends TestCase
     {
         $attributes = $this->createParametersMock();
         $attributes
-            ->shouldReceive('get')->with('id')
+            ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
 
         $filters = $this->createParametersMock();
