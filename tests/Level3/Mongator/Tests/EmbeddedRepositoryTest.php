@@ -26,9 +26,9 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->document = $this->factory->quick('Model\Article', array(
             'id' => new \MongoId(self::VALID_MONGO_ID_B),
-            'sources' => [
-                ['id' => new \MongoId(self::VALID_MONGO_ID)]
-            ]
+            'sources' => array(
+                array('id' => new \MongoId(self::VALID_MONGO_ID))
+            )
         ));
 
         $this->docRepository = $this->createDocumentRepositoryMock();
