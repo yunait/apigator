@@ -10,11 +10,11 @@ class MongoId extends Type
 
     public function fromRequest()
     {
-        return new NativeMongoId($mongoIdString);
+        return 'new \MongoId($string)';
     }
 
     public function toResponse()
     {
-        return '(string)$mongoId;';
+        return '(string) $object';
     }
 }

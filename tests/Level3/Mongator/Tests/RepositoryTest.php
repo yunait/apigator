@@ -17,6 +17,8 @@ use Mockery as m;
 class RepositoryTest extends TestCase
 {
     const VALID_MONGO_ID = '4af9f23d8ead0e1d32000000';
+    const VALID_ISO_DATE = '2005-08-15T15:52:01+0000';
+
     const EXAMPLE_URI = 'foo/bar';
 
     protected function getRepository()
@@ -77,7 +79,7 @@ class RepositoryTest extends TestCase
     public function testPost()
     {
         $atributes = $this->createParametersMock();
-        $data = array('foo' => 'bar');
+        $data = array('date' => self::VALID_ISO_DATE);
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
@@ -91,17 +93,15 @@ class RepositoryTest extends TestCase
             ->shouldReceive('create')->withNoArgs()->once()
             ->andReturn($this->document);
 
-        $document
-            ->shouldReceive('fromArray')->with($data)->once()
-            ->andReturn(null);
-
-        $document
-            ->shouldReceive('save')->withNoArgs()->once()
-            ->andReturn(null);
+       
 
         $resource = $repository->post($atributes, $data);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
+        $data = $resource->getData();
+        $this->assertCount(9, $data);
+        $this->assertInstanceOf('DateTime', $this->document->getDate());
+
     }
 
     public function testPut()
@@ -112,7 +112,7 @@ class RepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $expectedData = $data = array('foo' => 'bar');
+        $expectedData = $data = array('date' => self::VALID_ISO_DATE);
         $expectedData['id'] = $mongoId;
 
         $document = $this->factory->quick('Model\Article', array(), false);
@@ -128,6 +128,10 @@ class RepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
+
+        $data = $resource->getData();
+        $this->assertCount(9, $data);
+        $this->assertInstanceOf('DateTime', $document->getDate());
     }
 
     public function testPatch()
@@ -138,7 +142,7 @@ class RepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $data = $expectedData = array('foo' => 'bar');
+        $data = $expectedData = array('date' => self::VALID_ISO_DATE);
         $data['id'] = $mongoId;
 
         $repository = $this->getRepository();
@@ -147,6 +151,10 @@ class RepositoryTest extends TestCase
         $resource = $repository->patch($atributes, $data);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
+        
+        $data = $resource->getData();
+        $this->assertCount(9, $data);
+        $this->assertInstanceOf('DateTime', $this->document->getDate());
     }
 
     public function testDelete()

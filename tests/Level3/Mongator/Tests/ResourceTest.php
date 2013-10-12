@@ -15,9 +15,16 @@ use Rest\ArticleResource;
 use Mockery as m;
 
 use Level3\Formatter\JsonFormatter;
+use MongoId;
+use DateTime;
 
 class ResourceTest extends TestCase
 {
+    const VALID_MONGO_ID = '4af9f23d8ead0e1d32000000';
+    const VALID_ISO_DATE = '2005-08-15T15:52:01+0000';
+    const INVALID_MONGO_ID = 'foo';
+    const INVALID_ISO_DATE = 'bar';
+
     protected function createResource()
     {
         $this->hub = $this->createHubMock();
@@ -119,6 +126,126 @@ class ResourceTest extends TestCase
         $this->assertCount(2, $links['categories']);
         $this->assertSame('category/foo', $links['categories'][0]->getHref());
         $this->assertSame('category/foo', $links['categories'][1]->getHref());
+    }
+
+    public function testFormatToDocument()
+    {
+        $data = array(
+            'id' => self::VALID_MONGO_ID,
+            'date' => self::VALID_ISO_DATE,
+            'source' => array(
+                'id' => self::VALID_MONGO_ID,
+            ),
+            'comments' => array(
+                array('date' => self::VALID_ISO_DATE),
+                array('date' => self::VALID_ISO_DATE)
+            ),
+            'author' => self::VALID_MONGO_ID,
+            'categories' => array(
+                self::VALID_MONGO_ID,
+                self::VALID_MONGO_ID
+            )
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+        $this->assertInstanceOf('MongoId', $result['id']);
+        $this->assertSame(self::VALID_MONGO_ID, (string) $result['id']);
+
+        $this->assertInstanceOf('DateTime', $result['date']);
+        $this->assertSame(self::VALID_ISO_DATE, $result['date']->format(DateTime::ISO8601));
+
+        $this->assertInstanceOf('MongoId', $result['source']['id']);
+        $this->assertSame(self::VALID_MONGO_ID, (string) $result['source']['id']);
+
+        $this->assertInstanceOf('DateTime', $result['comments'][0]['date']);
+        $this->assertSame(self::VALID_ISO_DATE, $result['comments'][0]['date']->format(DateTime::ISO8601));
+
+        $this->assertInstanceOf('DateTime', $result['comments'][1]['date']);
+        $this->assertSame(self::VALID_ISO_DATE, $result['comments'][1]['date']->format(DateTime::ISO8601));
+        
+        $this->assertFalse(isset($result['author']));
+        $this->assertInstanceOf('MongoId', $result['author_reference_field']);
+        $this->assertSame(self::VALID_MONGO_ID, (string) $result['author_reference_field']);
+
+        $this->assertFalse(isset($result['categories']));
+        $this->assertInstanceOf('MongoId', $result['categories_reference_field'][0]);
+        $this->assertSame(self::VALID_MONGO_ID, (string) $result['categories_reference_field'][0]);
+        $this->assertInstanceOf('MongoId', $result['categories_reference_field'][1]);
+        $this->assertSame(self::VALID_MONGO_ID, (string) $result['categories_reference_field'][1]);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidId()
+    {
+        $data = array(
+            'id' => self::INVALID_MONGO_ID
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidDate()
+    {
+        $data = array(
+            'date' => self::INVALID_ISO_DATE
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidEmbedded()
+    {
+        $data = array(
+            'source' => ''
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidEmbeddedMany()
+    {
+        $data = array(
+            'comments' => Array('')
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidReference()
+    {
+        $data = array(
+            'author' => self::INVALID_MONGO_ID,
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+    }
+
+    /**
+     * @expectedException Level3\Exceptions\BadRequest
+     */
+    public function testFormatToDocumentInvalidReferenceMany()
+    {
+        $data = array(
+            'categories' => Array(
+                self::INVALID_MONGO_ID,
+            )
+        );
+
+        $result = ArticleResource::formatToDocument($data);
     }
 
     protected function defineFactoryDefaults()

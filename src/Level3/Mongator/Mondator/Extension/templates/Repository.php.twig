@@ -85,7 +85,7 @@
     public function post(\Level3\Resource\Parameters $attributes, Array $data)
     {
         $document = $this->createDocument($attributes);
-        $document->fromArray($data);
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -104,10 +104,10 @@
 {% else %}
         $orignalDocument = $this->getDocument($attributes);
 {% endif %}
-        $data['id'] = $orignalDocument->getId();
+        $data['id'] = (string) $orignalDocument->getId();
 
         $document = $this->createDocument($attributes);
-        $document->fromArray($data);
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -137,7 +137,7 @@
 {% endif %}
         unset($data['id']);
         
-        $document->fromArray($data);
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
 {% if config_class.isEmbedded %}
 
         $rap = $document->getRootAndPath();

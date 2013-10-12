@@ -7,6 +7,121 @@
         $this->level3 = $level3;
     }
 
+    static public function formatToDocument(Array $data)
+    {
+{# fields #}
+{% if extension.isRepositoryNeeded(class) %}
+        if (isset($data['id'])) {
+            $string = (string) $data['id'];
+
+            try {
+                $data['id'] = $object = {{ extension.getTypeFromResponse('MongoId') }};
+            } catch (\Exception $e) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            if (!$object || $string != {{ extension.getTypeToResponse('MongoId') }}) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+        }
+       
+{% endif %}
+{% for name, config in config_class.fields %}
+{% if 'referenceField' not in config|keys %}
+{% if extension.hasType(config.type) %}
+        if (isset($data['{{ name }}'])) {
+            $string = $data['{{ name }}'];
+            try {
+                $data['{{ name }}'] = $object = {{ extension.getTypeFromResponse(config.type) }};
+            } catch (\Exception $e) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            if (!$object || $string != {{ extension.getTypeToResponse(config.type) }}) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+        }
+
+{% endif %}
+{% endif %}
+{% endfor %}
+{# embeddedsOne #}
+{% for name, config in config_class.embeddedsOne %}
+        if (isset($data['{{ name }}'])) {
+            if (!is_array($data['{{ name }}'])) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            $data['{{ name }}'] = \{{ extension.getResourceClassName(config.class) }}::formatToDocument($data['{{ name }}']);
+        }
+
+{% endfor %}
+{# embeddedsMany #}
+{% for name, config in config_class.embeddedsMany %}
+        if (isset($data['{{ name }}'])) {
+            if (!is_array($data['{{ name }}'])) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            $count = count($data['{{ name }}']);
+            for ($i=0;$i < $count ;$i++) { 
+                if (!is_array($data['{{ name }}'][$i])) {
+                    throw new \Level3\Exceptions\BadRequest();
+                }
+                
+                $data['{{ name }}'][$i] = \{{ extension.getResourceClassName(config.class) }}::formatToDocument($data['{{ name }}'][$i]);
+            }
+        }
+
+{% endfor %}
+{# referencesOne #}
+{% for name, config in config_class.referencesOne %}
+        if (isset($data['{{ name }}'])) {
+            $string = (string) $data['{{ name }}'];
+            unset($data['{{ name }}']);
+
+            try {
+                $data['{{ name }}_reference_field'] = $object = {{ extension.getTypeFromResponse('MongoId') }};
+            } catch (\Exception $e) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            if (!$object || $string != {{ extension.getTypeToResponse('MongoId') }}) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+        }
+
+{% endfor %}
+{# referencesMany #}
+{% for name, config in config_class.referencesMany %}
+        if (isset($data['{{ name }}'])) {
+            if (!is_array($data['{{ name }}'])) {
+                throw new \Level3\Exceptions\BadRequest();
+            }
+
+            $count = count($data['{{ name }}']);
+            for ($i=0;$i < $count ;$i++) { 
+                $string = (string) $data['{{ name }}'][$i];
+
+                try {
+                    $data['{{ name }}_reference_field'][$i] = $object = {{ extension.getTypeFromResponse('MongoId') }};
+                } catch (\Exception $e) {
+                    throw new \Level3\Exceptions\BadRequest();
+                }
+
+                if (!$object || $string != {{ extension.getTypeToResponse('MongoId') }}) {
+                    throw new \Level3\Exceptions\BadRequest();
+                }
+            }
+
+            unset($data['{{ name }}']);
+        }
+
+{% endfor %}
+        
+        return $data;
+    }
+
     public function fromDocument(\{{ class }} $document)
     {
         $this->setDataFromDocument($document);
@@ -28,17 +143,17 @@
 
 {# fields #}
 {% if extension.isRepositoryNeeded(class) %}
-        $mongoId = (string) $document->getId();
-        $data['id'] = {{ extension.getTypeToResponse('MongoId') }}
+        $object = $document->getId();
+        $data['id'] = {{ extension.getTypeToResponse('MongoId') }};
 
 {% endif %}
 {% for name, config in config_class.fields %}
 {% if 'referenceField' not in config|keys %}
 {% if extension.hasType(config.type) %}
 
-        $data['{{ name }}'] = ${{ config.type }} = $document->get{{name|ucfirst}}();
-        if (${{ config.type }}) {
-            $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }}
+        $data['{{ name }}'] = $object = $document->get{{name|ucfirst}}();
+        if ($object) {
+            $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }};
         }
 
 {% else %}
