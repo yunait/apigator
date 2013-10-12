@@ -30,11 +30,7 @@ class RepositoryTest extends TestCase
         $this->docRepository = $this->createDocumentRepositoryMock();
         $this->docRepository
             ->shouldReceive('findById')->with(array(self::VALID_MONGO_ID))
-            ->andReturn($this->docRepository);
-
-        $this->docRepository
-            ->shouldReceive('one')->withNoArgs()
-            ->andReturn($this->document);
+            ->andReturn(array($this->document));
 
         $this->mongator = $this->createMongatorMock();
         $this->mongator
@@ -226,9 +222,9 @@ class RepositoryTest extends TestCase
 
         $resources = $resource->getResources();
         $this->assertCount(1, $resources);
-        $this->assertCount(3, $resources['article']);
-        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][0]);
-        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][1]);
-        $this->assertInstanceOf('Rest\ArticleResource', $resources['article'][2]);
+        $this->assertCount(3, $resources['resources']);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['resources'][0]);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['resources'][1]);
+        $this->assertInstanceOf('Rest\ArticleResource', $resources['resources'][2]);
     }
 }

@@ -63,9 +63,9 @@ class ResourceTest extends TestCase
             ->with(m::type('Model\Source'))->andReturn($expected);
 
         $this->hub->shouldReceive('get')
-            ->with('source')->andReturn($repository);
+            ->with('article/source')->andReturn($repository);
         $this->hub->shouldReceive('get')
-            ->with('categories')->andReturn($repository);
+            ->with('category')->andReturn($repository);
 
 
         $resource->fromDocument($document);
@@ -101,9 +101,9 @@ class ResourceTest extends TestCase
         $this->hub->shouldReceive('get')
             ->with('author')->andReturn($repository);
         $this->hub->shouldReceive('get')
-            ->with('information')->andReturn($repository);
+            ->with('article_information')->andReturn($repository);
         $this->hub->shouldReceive('get')
-            ->with('categories')->andReturn($repository);
+            ->with('category')->andReturn($repository);
 
         $resource->fromDocument($document);
 

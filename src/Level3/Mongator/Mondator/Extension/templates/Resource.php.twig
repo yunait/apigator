@@ -18,7 +18,7 @@
     {
         foreach ($documents as $document) {
             $resource = $repository->createDocumentResource($document);  
-            $this->addResource('{{ config_class.key }}', $resource);
+            $this->addResource('resources', $resource);
         }
     }
 
@@ -74,7 +74,7 @@
 {% for name, config in config_class.referencesOne %}
         $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $uri = $this->getRepository('{{ extension.getRepositoryKey(name) }}')->getDocumentURI($referenced);
+            $uri = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}')->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $this->addLink('{{ name }}', $link);
         }
@@ -82,7 +82,7 @@
 {% endfor %}
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
-        $repository = $this->getRepository('{{ extension.getRepositoryKey(name) }}');
+        $repository = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
         foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
@@ -123,7 +123,7 @@
     protected function create{{ name|ucfirst }}EmbeddedResource(\{{ config.class }} $document)
     {
 {% if extension.isRepositoryNeeded(config.class) %}
-        $repository = $this->level3->getHub()->get('{{ extension.getRepositoryKey(config.class)}}');
+        $repository = $this->level3->getHub()->get('{{ extension.getRepositoryKey(class, name)}}');
         $resource = $repository->createDocumentResource($document);
 {% else %}
         $resource = new \{{ extension.getResourceClassName(config.class) }}($this->level3);

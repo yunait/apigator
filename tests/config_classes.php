@@ -20,7 +20,7 @@ return array(
             'simpleEmbedded' => array('class' => 'Model\SimpleEmbedded'),
         ),
         'embeddedsMany' => array(
-            'sources'          => array('class' => 'Model\Source'),
+            'sources'  => array('class' => 'Model\Source'),
             'comments' => array('class' => 'Model\Comment'),
         ),
         'referencesOne' => array(

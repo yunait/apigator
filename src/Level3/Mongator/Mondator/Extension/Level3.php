@@ -156,7 +156,7 @@ EOF
         return $this->getBaseModelClassName($class) . 'Repository';
     }
 
-    public function getRepositoryKey($class = null)
+    public function getRepositoryKey($class = null, $name = null)
     {
         if (!$class) {
             $class = $this->class;
@@ -166,18 +166,21 @@ EOF
         $key = str_replace($this->getOption('models_namespace'), '', $class);
         $key = str_replace('\\', '/', $key);
 
+        if ($name) {
+            $key .= '/' . $name;
+        }
+
         return $transformer->transform($key);
     }
 
     private function createMappingFromDocument()
     {
         $key = $this->getRepositoryKey();
-        $this->mapping[$key] = $this->class;
+        if (!$this->configClasses[$this->class]['isEmbedded']) {
+            $this->mapping[$key] = $this->class;
+        }
 
-        foreach (array_merge(
-            $this->configClass['embeddedsOne'],
-            $this->configClass['embeddedsMany']
-        ) as $name => $embedded) {
+        foreach ($this->configClass['embeddedsMany'] as $name => $embedded) {
             if ($this->isRepositoryNeeded($embedded['class'])) {
                 $this->mapping[$key . '/' . $name] = $embedded['class'];
             }

@@ -34,11 +34,7 @@ class EmbeddedRepositoryTest extends TestCase
         $this->docRepository = $this->createDocumentRepositoryMock();
         $this->docRepository
             ->shouldReceive('findById')->with(array(self::VALID_MONGO_ID_B))
-            ->andReturn($this->docRepository);
-
-        $this->docRepository
-            ->shouldReceive('one')->withNoArgs()
-            ->andReturn($this->document);
+            ->andReturn(array($this->document));
 
         $this->level3 = $this->createLevel3Mock();
 
@@ -254,8 +250,8 @@ class EmbeddedRepositoryTest extends TestCase
         $resources = $resource->getResources();       
 
         $this->assertCount(1, $resources);
-        $this->assertCount(1, $resources['source']);
-        $this->assertInstanceOf('Rest\SourceResource', $resources['source'][0]);
+        $this->assertCount(1, $resources['resources']);
+        $this->assertInstanceOf('Rest\SourceResource', $resources['resources'][0]);
       
     }
 }
