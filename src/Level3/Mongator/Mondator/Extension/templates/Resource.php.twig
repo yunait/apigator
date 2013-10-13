@@ -127,14 +127,62 @@
         $this->setDataFromDocument($document);
         $this->setResourcesFromDocument($document);
         $this->setLinksFromDocument($document);
+
+{% if extension.isRepositoryNeeded(class) %}
+{% if config_class.cache %}
+        $this->setCache({{ config_class.cache.ttl }});
+{% endif %}
+{% for config in config_class.behaviors %}
+{% if config.class == 'Mongator\\Behavior\\Timestampable' %}
+{% if 'updatedEnabled' not in config.options|keys %}
+        if ($updated = $document->get{{ config.options.updatedField|ucfirst }}()) {
+            $this->setLastUpdate($updated);
+        } else {
+            $created = $document->get{{ config.options.createdField|ucfirst }}();
+            $this->setLastUpdate($created);
+        }
+
+        $this->setId($document->getId() . $this->getLastUpdate()->getTimestamp());
+{% endif %}  
+{% endif %}  
+{% endfor %}
+
+{% endif %} 
     }
 
     public function fromDocuments(\Level3\Repository $repository, Array $documents)
     {
+{% if extension.isRepositoryNeeded(class) %}
+        $resourceIds = array();
+        $lastUpdate = null;
+{% endif %}
         foreach ($documents as $document) {
             $resource = $repository->createDocumentResource($document);  
             $this->addResource('resources', $resource);
+{% if extension.isRepositoryNeeded(class) %}
+            if (!$lastUpdate || $lastUpdate <= $resource->getLastUpdate()) {
+                $lastUpdate = $resource->getLastUpdate();
+            }
+
+            if ($id = $resource->getId()) {
+                $resourceIds[] = $id;
+            }
+{% endif %}
         }
+
+{% if extension.isRepositoryNeeded(class) %}
+{% if config_class.cache %}
+        $this->setCache({{ config_class.cache.ttl }});
+
+{% endif %}
+        if (count($resourceIds) == count($documents)) {
+            $this->setId(implode('|', $resourceIds));
+        }
+
+        if ($lastUpdate) {
+            $this->setLastUpdate($lastUpdate);
+        }
+{% endif %}
     }
 
     protected function setDataFromDocument(\{{ class }} $document)
@@ -249,3 +297,10 @@
     }
 
 {% endfor %}
+
+    public function setId($baseId)
+    {
+        $id = md5($baseId);
+
+        return parent::setId($id);
+    }
