@@ -50,6 +50,7 @@
 {% endif %}
 {% endif %}
 {% endfor %}
+
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
         if (isset($data['{{ name }}'])) {
@@ -197,10 +198,9 @@
         $data = array();
 
 {# fields #}
-{% if extension.isRepositoryNeeded(class) %}
+{% if extension.isRepositoryNeeded(class) or 'id' in config_class.fields|keys %}
         $object = $document->getId();
         $data['id'] = {{ extension.getTypeToResponse('MongoId') }};
-
 {% endif %}
 {% for name, config in config_class.fields %}
 {% if 'referenceField' not in config|keys %}
@@ -212,8 +212,11 @@
         }
 
 {% else %}
+{% if name != 'id' %}
         $data['{{ name }}'] = $document->get{{name|ucfirst}}();
 {% endif %}
+{% endif %}
+
 {% endif %}
 {% endfor %}
 
