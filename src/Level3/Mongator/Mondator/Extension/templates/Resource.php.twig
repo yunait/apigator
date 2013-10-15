@@ -228,16 +228,20 @@
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
         if (${{ name }} = $document->get{{ name|ucfirst }}()) {
-            $this->addResource('{{ name }}', $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }}));
+            $resource = $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }});
+            $this->addData('{{ name }}', $resource->toArray());
         }
 
 {% endfor %}
 {# embeddedsMany #}
 {% for name, config in config_class.embeddedsMany %}
+        $data = array();
         foreach($document->get{{ name|ucfirst }}() as $embedded) {
-            $this->addResource('{{ name }}', $this->create{{ name|ucfirst }}EmbeddedResource($embedded));
+            $resource = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
+            $data[] = $resource->toArray();
         }
 
+        $this->addData('{{ name }}', $data);
 {% endfor %}
     }
 
@@ -253,13 +257,16 @@
 {% if extension.getHumanReadableField(config.class) %}
             $link->setTitle((string) $referenced->get{{ extension.getHumanReadableField(config.class)|ucfirst }}());
 {% endif %}
-            $this->addLink('{{ name }}', $link);
+            $this->setLink('{{ name }}', $link);
+            $this->addData('{{ name }}', (string) $referenced->getId());
         }
 
 {% endfor %}
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
         $repository = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
+
+        $ids = array(); $links = array();
         foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
@@ -267,9 +274,15 @@
 {% if extension.getHumanReadableField(config.class) %}
             $link->setTitle((string) $referenced->get{{ extension.getHumanReadableField(config.class)|ucfirst }}());
 {% endif %}
-            $this->addLink('{{ name }}', $link);
+            
+            $links[] = $link;
+            $ids[] = (string) $referenced->getId();
         }
 
+        if ($ids) {
+            $this->setLinks('{{ name }}', $links);
+            $this->addData('{{ name }}', $ids);
+        }
 {% endfor %}
     }
 
