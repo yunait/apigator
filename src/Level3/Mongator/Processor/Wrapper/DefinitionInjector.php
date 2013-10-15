@@ -18,6 +18,11 @@ class DefinitionInjector extends Wrapper
         $this->mongator = $mongator;
     }
 
+    public function error(Closure $execution, Request $request)
+    {
+        return $execution($request);
+    }
+    
     protected function processRequest(Closure $execution, Request $request, $method)
     {
         $response = $execution($request);
@@ -25,7 +30,7 @@ class DefinitionInjector extends Wrapper
         $key = $request->getKey();
         $resource = $response->getResource();
 
-        if (!$key || !$resource || $method == 'error') {
+        if (!$key || !$resource) {
             return $response;
         }
 

@@ -7,6 +7,11 @@
         $this->level3 = $level3;
     }
 
+    public function getDocument()
+    {
+        return $this->document;
+    }
+
     static public function formatToDocument(Array $data)
     {
 {# fields #}
@@ -124,6 +129,8 @@
 
     public function fromDocument(\{{ class }} $document)
     {
+        $this->document = $document;
+
         $this->setDataFromDocument($document);
         $this->setResourcesFromDocument($document);
         $this->setLinksFromDocument($document);
