@@ -120,6 +120,23 @@ EOF
         return $this->getOption('namespace') . self::NAMESPACE_SEPARARTOR . $model;
     }
 
+    public function getHumanReadableField($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        foreach ($this->configClasses[$class]['fields'] as $field => $config) {
+            if (isset($config['humanReadableField'])) {
+                return $field;
+            }
+        }
+
+        return false;
+    }
+
+
+
     public function getBaseModelClassName($class = null)
     {
         if (!$class) {
