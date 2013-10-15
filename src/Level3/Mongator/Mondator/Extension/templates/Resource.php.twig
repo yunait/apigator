@@ -246,6 +246,7 @@
         if ($referenced) {
             $uri = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}')->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
+            $link->setName((string) $referenced->getId());
             $this->addLink('{{ name }}', $link);
         }
 
@@ -256,6 +257,7 @@
         foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
+            $link->setName((string) $referenced->getId());
             $this->addLink('{{ name }}', $link);
         }
 

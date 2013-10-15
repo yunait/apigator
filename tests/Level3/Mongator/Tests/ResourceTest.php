@@ -114,6 +114,7 @@ class ResourceTest extends TestCase
 
         $resource->fromDocument($document);
 
+
         $links = $resource->getLinks();
 
         $this->assertCount(3, $links);
@@ -126,6 +127,10 @@ class ResourceTest extends TestCase
         $this->assertCount(2, $links['categories']);
         $this->assertSame('category/foo', $links['categories'][0]->getHref());
         $this->assertSame('category/foo', $links['categories'][1]->getHref());
+
+        $categories = $document->getCategories();
+        $this->assertSame((string) $categories->one()->getId(), $links['categories'][0]->getName());
+
     }
 
     public function testFormatToDocument()
