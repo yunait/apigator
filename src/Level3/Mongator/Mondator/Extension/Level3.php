@@ -125,7 +125,10 @@ EOF
         if (!$class) {
             $class = $this->class;
         }
-
+        if (!isset($this->configClasses[$class])) {
+            return false;
+        }
+        
         foreach ($this->configClasses[$class]['fields'] as $field => $config) {
             if (isset($config['humanReadableField'])) {
                 return $field;
