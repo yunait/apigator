@@ -77,17 +77,14 @@ class ResourceTest extends TestCase
 
         $resource->fromDocument($document);
 
-        $resources = $resource->getResources();
-        $this->assertCount(3, $resources);
-        $this->assertCount(1, $resources['source']);
-        $this->assertSame($expected, $resources['source'][0]);
+        $resources = $resource->getData();
+  
+        $this->assertCount(13, $resources);
+        $this->assertCount(0, $resources['source']);
 
         $this->assertCount(1, $resources['simpleEmbedded']);
-        $this->assertInstanceOf('Rest\SimpleEmbeddedResource', $resources['simpleEmbedded'][0]);
 
         $this->assertCount(2, $resources['comments']);
-        $this->assertInstanceOf('Rest\CommentResource', $resources['comments'][0]);
-        $this->assertInstanceOf('Rest\CommentResource', $resources['comments'][1]);
     }
 
     public function testFromDocumentLinks()
@@ -118,11 +115,8 @@ class ResourceTest extends TestCase
         $links = $resource->getLinks();
 
         $this->assertCount(3, $links);
-        $this->assertCount(1, $links['author']);
-        $this->assertSame('author/foo', $links['author'][0]->getHref());
-
-        $this->assertCount(1, $links['information']);
-        $this->assertSame('information/foo', $links['information'][0]->getHref());
+        $this->assertSame('author/foo', $links['author']->getHref());
+        $this->assertSame('information/foo', $links['information']->getHref());
 
         $this->assertCount(2, $links['categories']);
         $this->assertSame('category/foo', $links['categories'][0]->getHref());

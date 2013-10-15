@@ -99,7 +99,7 @@ class RepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(11, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
 
     }
@@ -130,7 +130,7 @@ class RepositoryTest extends TestCase
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
 
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(11, $data);
         $this->assertInstanceOf('DateTime', $document->getDate());
     }
 
@@ -153,7 +153,7 @@ class RepositoryTest extends TestCase
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(11, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
     }
 
