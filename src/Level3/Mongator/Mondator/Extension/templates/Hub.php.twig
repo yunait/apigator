@@ -1,9 +1,16 @@
 <?php
     protected $mongator;
+    protected $documentClassToMap;
+
 
     public function __construct(\Mongator\Mongator $mongator)
     {
         $this->mongator = $mongator;
+        $this->documentClassToMap = array(
+{% for key, class in extension.getMapping() %}
+            '{{ class }}' => '{{ key }}',
+{% endfor %} 
+        );
     }
 
     public function registerDefinitions()
@@ -32,3 +39,13 @@
     }
 {% endif %}
 {% endfor %} 
+
+    public function getByClass($documentClass)
+    {
+        if (isset($this->documentClassToMap[$documentClass])) {
+            $key = $this->documentClassToMap[$documentClass];
+            return $this->get($key);
+        }
+        
+        return null;
+    }

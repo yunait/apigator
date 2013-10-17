@@ -251,12 +251,15 @@
 {% for name, config in config_class.referencesOne %}
         $referenced = $document->get{{ name|ucfirst }}();
         if ($referenced) {
-            $uri = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}')->getDocumentURI($referenced);
+{% if 'polymorphic' in config|keys %}
+            $repository =  $this->level3->getHub()->getByClass($referenced->getRepository()->getDocumentClass());
+{% else %}
+            $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
+{% endif %}
+            $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
-{% if extension.getHumanReadableField(config.class) %}
-            $link->setTitle((string) $referenced->get{{ extension.getHumanReadableField(config.class)|ucfirst }}());
-{% endif %}
+
             $this->setLink('{{ name }}', $link);
             $this->addData('{{ name }}', (string) $referenced->getId());
         }
@@ -264,16 +267,16 @@
 {% endfor %}
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
-        $repository = $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
-
+{% if 'polymorphic' in config|keys %}
+        $repository =  $this->level3->getHub()->getByClass($referenced->getRepository()->getDocumentClass());
+{% else %}
+        $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
+{% endif %}
         $ids = array(); $links = array();
         foreach ($document->get{{ name|ucfirst }}() as $referenced) {
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
-{% if extension.getHumanReadableField(config.class) %}
-            $link->setTitle((string) $referenced->get{{ extension.getHumanReadableField(config.class)|ucfirst }}());
-{% endif %}
             
             $links[] = $link;
             $ids[] = (string) $referenced->getId();
