@@ -259,6 +259,9 @@
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
+{% if extension.classHasBehavior('Mongator\\Behavior\\Stringifiable',config.class) %}
+            $link->setTitle((string) $referenced);
+{% endif %}
 
             $this->setLink('{{ name }}', $link);
             $this->addData('{{ name }}', (string) $referenced->getId());
@@ -277,7 +280,10 @@
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
-            
+{% if extension.classHasBehavior('Mongator\\Behavior\\Stringifiable',config.class) %}
+            $link->setTitle((string) $referenced);
+{% endif %}
+
             $links[] = $link;
             $ids[] = (string) $referenced->getId();
         }

@@ -138,7 +138,20 @@ EOF
         return false;
     }
 
+    public function classHasBehavior($behavior, $class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
 
+        foreach ($this->configClasses[$class]['behaviors'] as $field => $config) {
+            if ($config['class'] == $behavior) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public function getBaseModelClassName($class = null)
     {
