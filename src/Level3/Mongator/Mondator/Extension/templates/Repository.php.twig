@@ -64,7 +64,7 @@
 
         $pageSize = 100;
         if ((int) $range[1] != 0) {
-            $pageSize = min($range[1] - $range[0], $pageSize);
+            $pageSize = min($range[1] - $range[0] + 1, $pageSize);
         }
 
         $page = $range[0] / $pageSize;
