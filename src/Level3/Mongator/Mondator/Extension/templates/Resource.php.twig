@@ -259,10 +259,11 @@
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
-{% if extension.classHasBehavior('Mongator\\Behavior\\Stringifiable',config.class) %}
-            $link->setTitle((string) $referenced);
-{% endif %}
 
+            if (is_callable($referenced,'__toString')) {
+                $link->setTitle((string) $referenced);
+            }
+            
             $this->setLink('{{ name }}', $link);
             $this->addData('{{ name }}', (string) $referenced->getId());
         }
@@ -280,9 +281,10 @@
             $uri = $repository->getDocumentURI($referenced);
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
-{% if extension.classHasBehavior('Mongator\\Behavior\\Stringifiable',config.class) %}
-            $link->setTitle((string) $referenced);
-{% endif %}
+
+            if (is_callable($referenced,'__toString')) {
+                $link->setTitle((string) $referenced);
+            }
 
             $links[] = $link;
             $ids[] = (string) $referenced->getId();
