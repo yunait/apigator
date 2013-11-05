@@ -260,7 +260,7 @@
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
 
-            if (is_callable($referenced,'__toString')) {
+            if (method_exists($referenced,'__toString')) {
                 $link->setTitle((string) $referenced);
             }
             
@@ -282,7 +282,7 @@
             $link = new \Level3\Resource\Link($uri);
             $link->setName((string) $referenced->getId());
 
-            if (is_callable($referenced,'__toString')) {
+            if (method_exists($referenced,'__toString')) {
                 $link->setTitle((string) $referenced);
             }
 
