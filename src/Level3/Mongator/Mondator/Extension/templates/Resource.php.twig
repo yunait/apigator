@@ -2,6 +2,10 @@
     protected $document;
     protected $level3;
 
+    protected $areLinksInitialized;
+    protected $areLinkedResourcesInitialized;
+    protected $isDataInitialized;
+
     public function __construct(\Level3\Level3 $level3)
     {
         $this->level3 = $level3;
@@ -251,7 +255,7 @@
 
 {% endfor %}
 
-        $this->setData($data);
+        $this->setData(array_merge($data, parent::getData()));
     }
 
     protected function setLinkedResourcesFromDocument()
@@ -357,33 +361,54 @@
 
     public function getAllLinkedResources()
     {
-        $this->initializeLinkedResources();
+        if (!$this->areLinkedResourcesInitialized) {
+            $this->initializeLinkedResources();
+        }
+
         return parent::getAllLinkedResources();
     }
 
     public function getLinkedResources($rel)
     {
-        $this->initializeLinkedResources();
+        if (!$this->areLinkedResourcesInitialized) {
+            $this->initializeLinkedResources();
+        }
+
         return parent::getLinkedResources($rel);
     }
 
     public function getAllLinks()
     {
-        $this->initializeLinks();
-        $this->initializeLinkedResources();
+        if (!$this->areLinksInitialized) {
+            $this->initializeLinks();
+        }
+
+        if (!$this->areLinkedResourcesInitialized) {
+            $this->initializeLinkedResources();
+        }
+
         return parent::getAllLinks();
     }
 
     public function getLinks($rel)
     {
-        $this->initializeLinks();
-        $this->initializeLinkedResources();
+        if (!$this->areLinksInitialized) {
+            $this->initializeLinks();
+        }
+
+        if (!$this->areLinkedResourcesInitialized) {
+            $this->initializeLinkedResources();
+        }
+
         return parent::getLinks($rel);
     }
 
     public function getData()
     {
-        $this->initializeData();
+        if (!$this->isDataInitialized) {
+            $this->initializeData();
+        }
+
         return parent::getData();
     }
 
@@ -415,7 +440,7 @@
         }
 
         if ($updated = $this->document->get{{ config.options.updatedField|ucfirst }}()) {
-            return $this->updated;
+            return $updated;
         } 
 
         return $this->document->get{{ config.options.createdField|ucfirst }}();
@@ -434,9 +459,17 @@
 
     public function toArray()
     {
-        $this->initializeData();
-        $this->initializeLinkedResources();
-        $this->initializeLinks();
+        if (!$this->isDataInitialized) {
+            $this->initializeData();
+        }
+
+        if (!$this->areLinkedResourcesInitialized) {
+            $this->initializeLinkedResources();
+        }
+
+        if (!$this->areLinksInitialized) {
+            $this->initializeLinks();
+        }
 
         return parent::toArray();
     }
