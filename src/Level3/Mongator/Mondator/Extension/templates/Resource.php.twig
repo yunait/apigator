@@ -201,6 +201,8 @@
 
     protected function setDataFromDocument()
     {
+        $this->isDataInitialized = true;
+
         $data = array();
 
 {# fields #}
@@ -260,6 +262,8 @@
 
     protected function setLinkedResourcesFromDocument()
     {
+        $this->areLinkedResourcesInitialized = true;
+
 {# referencesOne #}
 {% for name, config in config_class.referencesOne %}
         $referenced = $this->document->get{{ name|ucfirst }}();
@@ -296,7 +300,7 @@
 
     protected function setLinksFromDocument()
     {
-
+        $this->areLinksInitialized = true;
     }
 
     protected function getRepository($repositoryKey)
