@@ -85,7 +85,8 @@ class EmbeddedRepositoryTest extends TestCase
         $resource = $repository->get($attributes);
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
-        $this->assertCount(6, $resource->getData());
+
+        $this->assertCount(9, $resource->getData());
     }
 
     public function testPost()
@@ -105,7 +106,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
         $data = $resource->getData();
-        $this->assertCount(6, $data);
+        $this->assertCount(9, $data);
         $this->assertSame($data['name'], 'bar');
 
     }
@@ -139,7 +140,7 @@ class EmbeddedRepositoryTest extends TestCase
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
 
         $data = $resource->getData();
-        $this->assertCount(6, $data);
+        $this->assertCount(9, $data);
         $this->assertSame($data['name'], 'bar');
     }
 
@@ -164,7 +165,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
         $data = $resource->getData();
-        $this->assertCount(6, $data);
+        $this->assertCount(9, $data);
         $this->assertSame($data['name'], 'qux');
     }
 
@@ -247,7 +248,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
 
-        $resources = $resource->getResources();       
+        $resources = $resource->getAllResources();       
 
         $this->assertCount(1, $resources);
         $this->assertCount(1, $resources['resources']);

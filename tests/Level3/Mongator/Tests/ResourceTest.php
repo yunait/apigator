@@ -78,12 +78,10 @@ class ResourceTest extends TestCase
         $resource->fromDocument($document);
 
         $resources = $resource->getData();
-  
-        $this->assertCount(13, $resources);
+
+        $this->assertCount(16, $resources);
         $this->assertCount(0, $resources['source']);
-
         $this->assertCount(1, $resources['simpleEmbedded']);
-
         $this->assertCount(2, $resources['comments']);
     }
 
@@ -94,13 +92,15 @@ class ResourceTest extends TestCase
         $resource = $this->createResource();
 
         $repository = $this->createRepositoryMock();
-        $repository->shouldReceive('getDocumentURI')
-            ->with(m::type('Model\Author'))->andReturn('author/foo');
-        $repository->shouldReceive('getDocumentURI')
-            ->with(m::type('Model\Category'))->andReturn('category/foo');
-        $repository->shouldReceive('getDocumentURI')
-            ->with(m::type('Model\ArticleInformation'))->andReturn('information/foo');
-
+        $repository->shouldReceive('createDocumentResource')
+            ->with(m::type('Model\Author'))
+            ->andReturn($this->createResourceWithLinkMock('Rest\AuthorResource', 'author/foo'));
+        $repository->shouldReceive('createDocumentResource')
+            ->with(m::type('Model\Category'))
+            ->andReturn($this->createResourceWithLinkMock('Rest\CategoryResource', 'category/foo'));
+        $repository->shouldReceive('createDocumentResource')
+            ->with(m::type('Model\ArticleInformation'))
+            ->andReturn($this->createResourceWithLinkMock('Rest\ArticleResource', 'information/foo'));
 
         $this->hub->shouldReceive('get')
             ->with('author')->andReturn($repository);
@@ -111,8 +111,7 @@ class ResourceTest extends TestCase
 
         $resource->fromDocument($document);
 
-
-        $links = $resource->getLinks();
+        $links = $resource->getAllLinks();
 
         $this->assertCount(3, $links);
         $this->assertSame('author/foo', $links['author']->getHref());
@@ -123,8 +122,7 @@ class ResourceTest extends TestCase
         $this->assertSame('category/foo', $links['categories'][1]->getHref());
 
         $categories = $document->getCategories();
-        $this->assertSame((string) $categories->one()->getId(), $links['categories'][0]->getName());
-
+        $this->assertSame('foo', $links['categories'][0]->getName());
     }
 
     public function testFormatToDocument()

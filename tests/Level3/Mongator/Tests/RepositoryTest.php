@@ -26,7 +26,9 @@ class RepositoryTest extends TestCase
         $mongoId = new \MongoId('4af9f23d8ead0e1d32000000');
 
         $this->document = $this->factory->quick('Model\Article', array(
-            'id' => $mongoId
+            'id' => $mongoId,
+            'author' => 1,
+            'categories' => 2
         ));
 
         $this->docRepository = $this->createDocumentRepositoryMock();
@@ -98,8 +100,9 @@ class RepositoryTest extends TestCase
         $resource = $repository->post($atributes, $data);
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
-        $data = $resource->getData();
-        $this->assertCount(11, $data);
+        $data = $resource->getData();       
+
+        $this->assertCount(16, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
 
     }
@@ -130,7 +133,7 @@ class RepositoryTest extends TestCase
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
 
         $data = $resource->getData();
-        $this->assertCount(11, $data);
+        $this->assertCount(16, $data);
         $this->assertInstanceOf('DateTime', $document->getDate());
     }
 
@@ -153,7 +156,7 @@ class RepositoryTest extends TestCase
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         
         $data = $resource->getData();
-        $this->assertCount(11, $data);
+        $this->assertCount(16, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
     }
 
@@ -206,7 +209,7 @@ class RepositoryTest extends TestCase
             ->andReturn($query);
 
         $query
-            ->shouldReceive('limit')->with(40)->once()
+            ->shouldReceive('limit')->with(41)->once()
             ->andReturn($query);
 
         $query
@@ -228,7 +231,7 @@ class RepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
 
-        $resources = $resource->getResources();
+        $resources = $resource->getAllResources();
         $this->assertCount(1, $resources);
         $this->assertCount(3, $resources['resources']);
         $this->assertInstanceOf('Rest\ArticleResource', $resources['resources'][0]);

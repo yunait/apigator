@@ -133,4 +133,21 @@ class TestCase extends \PHPUnit_Framework_TestCase
     {
         return m::mock('Model\Article');
     }
+
+    protected function createLinkMock()
+    {
+        return m::mock('Level3\Resource\Link');
+    }
+
+    protected function createResourceWithLinkMock($class, $href)
+    {
+        $link = $this->createLinkMock();
+        $link->shouldReceive('getHref')->once()->andReturn($href);
+        $link->shouldReceive('getName')->once()->andReturn('foo');
+
+        $mock = m::mock($class);
+        $mock->shouldReceive('getSelfLink')->once()->andReturn($link);
+
+        return $mock;
+    }
 }

@@ -131,31 +131,33 @@
     public function fromDocument(\{{ class }} $document)
     {
         $this->document = $document;
+    }
 
-        $this->setDataFromDocument($document);
-        $this->setResourcesFromDocument($document);
-        $this->setLinksFromDocument($document);
-
-{% if extension.isRepositoryNeeded(class) %}
-{% if config_class.cache %}
-        $this->setCache({{ config_class.cache.ttl }});
-{% endif %}
-{% for config in config_class.behaviors %}
-{% if config.class == 'Mongator\\Behavior\\Timestampable' %}
-{% if 'updatedEnabled' not in config.options|keys %}
-        if ($updated = $document->get{{ config.options.updatedField|ucfirst }}()) {
-            $this->setLastUpdate($updated);
-        } else {
-            $created = $document->get{{ config.options.createdField|ucfirst }}();
-            $this->setLastUpdate($created);
+    public function initializeData()
+    {
+        if (!$this->document) {
+            return;
         }
 
-        $this->setId($document->getId() . $this->getLastUpdate()->getTimestamp());
-{% endif %}  
-{% endif %}  
-{% endfor %}
+        $this->setDataFromDocument();
+    }
 
-{% endif %} 
+    public function initializeLinkedResources()
+    {
+        if (!$this->document) {
+            return;
+        }
+
+        $this->setLinkedResourcesFromDocument();
+    }
+
+    public function initializeLinks()
+    {
+        if (!$this->document) {
+            return;
+        }
+
+        $this->setLinksFromDocument();
     }
 
     public function fromDocuments(\Level3\Repository $repository, Array $documents)
@@ -193,79 +195,79 @@
 {% endif %}
     }
 
-    protected function setDataFromDocument(\{{ class }} $document)
+    protected function setDataFromDocument()
     {
         $data = array();
 
 {# fields #}
 {% if extension.isRepositoryNeeded(class) or 'id' in config_class.fields|keys %}
-        $object = $document->getId();
+        $object = $this->document->getId();
         $data['id'] = {{ extension.getTypeToResponse('MongoId') }};
 {% endif %}
 {% for name, config in config_class.fields %}
 {% if 'referenceField' not in config|keys %}
 {% if extension.hasType(config.type) %}
-
-        $data['{{ name }}'] = $object = $document->get{{name|ucfirst}}();
+        $data['{{ name }}'] = $object = $this->document->get{{name|ucfirst}}();
         if ($object) {
             $data['{{ name }}'] = {{ extension.getTypeToResponse(config.type) }};
         }
 
 {% else %}
 {% if name != 'id' %}
-        $data['{{ name }}'] = $document->get{{name|ucfirst}}();
+        $data['{{ name }}'] = $this->document->get{{name|ucfirst}}();
 {% endif %}
 {% endif %}
-
 {% endif %}
 {% endfor %}
+{# referencesOne #}
+{% for name, config in config_class.referencesOne %}
+        $data['{{ name }}'] = (string) $this->document->get{{ config.field|ucfirst }}();
+{% endfor %}
 
-        $this->setData($data);
-    }
-    
-    protected function setResourcesFromDocument(\{{ class }} $document)
-    {
+{# referencesMany #}
+{% for name, config in config_class.referencesMany %}
+        $data['{{ name }}'] = array();
+        foreach ((array) $this->document->get{{ config.field|ucfirst }}() as $referenced) {
+            $data['{{ name }}'][] = (string) $referenced;
+        }
+
+{% endfor %}
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
-        if (${{ name }} = $document->get{{ name|ucfirst }}()) {
+        $data['{{ name }}'] = null;
+        if (${{ name }} = $this->document->get{{ name|ucfirst }}()) {
             $resource = $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }});
-            $this->addData('{{ name }}', $resource->toArray());
+            $data['{{ name }}'] = $resource->toArray();
         }
 
 {% endfor %}
 {# embeddedsMany #}
 {% for name, config in config_class.embeddedsMany %}
-        $data = array();
-        foreach($document->get{{ name|ucfirst }}() as $embedded) {
+        $data['{{ name }}'] = array();
+        foreach($this->document->get{{ name|ucfirst }}() as $embedded) {
             $resource = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
-            $data[] = $resource->toArray();
+            $data['{{ name }}'][] = $resource->toArray();
         }
 
-        $this->addData('{{ name }}', $data);
 {% endfor %}
+
+        $this->setData($data);
     }
 
-    protected function setLinksFromDocument(\{{ class }} $document)
+    protected function setLinkedResourcesFromDocument()
     {
 {# referencesOne #}
 {% for name, config in config_class.referencesOne %}
-        $referenced = $document->get{{ name|ucfirst }}();
+        $referenced = $this->document->get{{ name|ucfirst }}();
         if ($referenced) {
 {% if 'polymorphic' in config|keys %}
             $repository =  $this->level3->getHub()->getByClass($referenced->getRepository()->getDocumentClass());
 {% else %}
             $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
 {% endif %}
-            $uri = $repository->getDocumentURI($referenced);
-            $link = new \Level3\Resource\Link($uri);
-            $link->setName((string) $referenced->getId());
-
-            if (method_exists($referenced,'__toString')) {
-                $link->setTitle((string) $referenced);
-            }
+            $resource = $repository->createDocumentResource($referenced);
             
-            $this->setLink('{{ name }}', $link);
-            $this->addData('{{ name }}', (string) $referenced->getId());
+            $this->linkResource('{{ name }}', $resource);
         }
 
 {% endfor %}
@@ -276,25 +278,21 @@
 {% else %}
         $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
 {% endif %}
-        $ids = array(); $links = array();
-        foreach ($document->get{{ name|ucfirst }}() as $referenced) {
-            $uri = $repository->getDocumentURI($referenced);
-            $link = new \Level3\Resource\Link($uri);
-            $link->setName((string) $referenced->getId());
-
-            if (method_exists($referenced,'__toString')) {
-                $link->setTitle((string) $referenced);
-            }
-
-            $links[] = $link;
-            $ids[] = (string) $referenced->getId();
+        $resources = array();
+        foreach ($this->document->get{{ name|ucfirst }}() as $referenced) {
+            $resources[] = $resource = $repository->createDocumentResource($referenced);
         }
 
-        if ($ids) {
-            $this->setLinks('{{ name }}', $links);
-            $this->addData('{{ name }}', $ids);
+        if ($resources) {
+            $this->linkResources('{{ name }}', $resources);
         }
 {% endfor %}
+    }
+
+
+    protected function setLinksFromDocument()
+    {
+
     }
 
     protected function getRepository($repositoryKey)
@@ -345,4 +343,100 @@
         $id = md5($baseId);
 
         return parent::setId($id);
+    }
+
+    public function getId()
+    {
+        $id = parent::getId();
+        if (!$this->document || $id || !$this->getLastUpdate()) {
+            return $id;
+        }
+
+        return ($this->document->getId() . $this->getLastUpdate()->getTimestamp());
+    }
+
+    public function getAllLinkedResources()
+    {
+        $this->initializeLinkedResources();
+        return parent::getAllLinkedResources();
+    }
+
+    public function getLinkedResources($rel)
+    {
+        $this->initializeLinkedResources();
+        return parent::getLinkedResources($rel);
+    }
+
+    public function getAllLinks()
+    {
+        $this->initializeLinks();
+        $this->initializeLinkedResources();
+        return parent::getAllLinks();
+    }
+
+    public function getLinks($rel)
+    {
+        $this->initializeLinks();
+        $this->initializeLinkedResources();
+        return parent::getLinks($rel);
+    }
+
+    public function getData()
+    {
+        $this->initializeData();
+        return parent::getData();
+    }
+
+    public function getSelfLink()
+    {
+        $link = parent::getSelfLink();
+        if (!$link) {
+            return $link;
+        }
+
+        $link->setName((string) $this->document->getId());
+
+        if (method_exists($this->document,'__toString')) {
+            $link->setTitle((string) $this->document);
+        }
+
+        return $link;
+    }
+
+{% if extension.isRepositoryNeeded(class) %}
+{% for config in config_class.behaviors %}
+{% if config.class == 'Mongator\\Behavior\\Timestampable' %}
+{% if 'updatedEnabled' not in config.options|keys %}
+    public function getLastUpdate()
+    {
+        $lastUpdate = parent::getLastUpdate();
+        if (!$this->document || $lastUpdate) {
+            return $lastUpdate;
+        }
+
+        if ($updated = $this->document->get{{ config.options.updatedField|ucfirst }}()) {
+            return $this->updated;
+        } 
+
+        return $this->document->get{{ config.options.createdField|ucfirst }}();
+    }
+{% endif %}  
+{% endif %}  
+{% endfor %}
+
+{% if config_class.cache %}
+    public function getCache()
+    {
+        return {{ config_class.cache.ttl }};
+    }
+{% endif %}
+{% endif %}
+
+    public function toArray()
+    {
+        $this->initializeData();
+        $this->initializeLinkedResources();
+        $this->initializeLinks();
+
+        return parent::toArray();
     }
