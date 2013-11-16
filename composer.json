@@ -1,10 +1,10 @@
 {
-    "name": "yunait/level3-mongator",
+    "name": "level3php/level3-mongator",
     "homepage": "http://github.com/yunait/level3-mongator",
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.0",
-        "yunait/level3": "*",
+        "level3php/level3": "*",
         "mattketmo/camel": "dev-master",
         "mongator/mongator": ">=1.4.0",
         "mongator/mondator": ">=1.0.0",
