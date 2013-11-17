@@ -106,7 +106,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
     protected function createParametersMock()
     {
-        return m::mock('Level3\Resource\Parameters');
+        return m::mock('Level3\Messages\Parameters');
     }
 
     protected function createMongatorMock()

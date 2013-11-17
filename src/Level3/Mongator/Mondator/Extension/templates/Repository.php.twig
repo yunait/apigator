@@ -8,7 +8,7 @@
         $this->mongator = $mongator;
     }
 
-    public function find(\Level3\Resource\Parameters $attributes, \Level3\Resource\Parameters $filters)
+    public function find(\Level3\Messages\Parameters $attributes, \Level3\Messages\Parameters $filters)
     {
 {% if config_class.isEmbedded %}
         $group = $this->getEmbeddedGroup($attributes);
@@ -28,7 +28,7 @@
         return $resource;
     }
 
-    protected function applyCriteriaToQuery($query, \Level3\Resource\Parameters $filters)
+    protected function applyCriteriaToQuery($query, \Level3\Messages\Parameters $filters)
     {
         foreach ($filters->get('criteria') as $key => $value) {
             $this->applyMethodToQuery($query, $key, $value);
@@ -48,7 +48,7 @@
         $query->$method($value);
     }
 
-    protected function getChunk(\Level3\Resource\Parameters $filters)
+    protected function getChunk(\Level3\Messages\Parameters $filters)
     {
         list($page, $pageSize) = $this->boundsToPageAndPageSize($filters);
 
@@ -58,7 +58,7 @@
         return $chunk;
     }
 
-    protected function boundsToPageAndPageSize(\Level3\Resource\Parameters $filters)
+    protected function boundsToPageAndPageSize(\Level3\Messages\Parameters $filters)
     {
         $range = $filters->get('range');
 
@@ -71,7 +71,7 @@
         return array($page, $pageSize);
     }
 
-    public function get(\Level3\Resource\Parameters $attributes)
+    public function get(\Level3\Messages\Parameters $attributes)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getEmbeddedDocument($attributes);
@@ -82,7 +82,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function post(\Level3\Resource\Parameters $attributes, Array $data)
+    public function post(\Level3\Messages\Parameters $attributes, Array $data)
     {
         $document = $this->createDocument($attributes);
         $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
@@ -97,7 +97,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function put(\Level3\Resource\Parameters $attributes, Array $data)
+    public function put(\Level3\Messages\Parameters $attributes, Array $data)
     {
 {% if config_class.isEmbedded %}
         $orignalDocument = $this->getEmbeddedDocument($attributes);
@@ -128,7 +128,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function patch(\Level3\Resource\Parameters $attributes, Array $data)
+    public function patch(\Level3\Messages\Parameters $attributes, Array $data)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getEmbeddedDocument($attributes);
@@ -149,7 +149,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function delete(\Level3\Resource\Parameters $attributes)
+    public function delete(\Level3\Messages\Parameters $attributes)
     {
 {% if config_class.isEmbedded %}
         $embedded = $this->getEmbeddedDocument($attributes);
@@ -168,7 +168,7 @@
     }
 
 
-    protected function createDocument(\Level3\Resource\Parameters  $attributes)
+    protected function createDocument(\Level3\Messages\Parameters  $attributes)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getDocument($attributes);
@@ -184,7 +184,7 @@
 {% endif %}
     }
 
-    protected function getDocument(\Level3\Resource\Parameters $attributes)
+    protected function getDocument(\Level3\Messages\Parameters $attributes)
     {
         $key = explode('/', $this->getKey());
 {% if config_class.isEmbedded %}
@@ -202,7 +202,7 @@
     }
 
 {% if config_class.isEmbedded %}
-    protected function getEmbeddedDocument(\Level3\Resource\Parameters $attributes)
+    protected function getEmbeddedDocument(\Level3\Messages\Parameters $attributes)
     {
         $key = explode('/', $this->getKey());
         $group = $this->getEmbeddedGroup($attributes);
@@ -220,7 +220,7 @@
 {% endif %}
 
 {% if config_class.isEmbedded %}
-    protected function getEmbeddedGroup(\Level3\Resource\Parameters $attributes)
+    protected function getEmbeddedGroup(\Level3\Messages\Parameters $attributes)
     {
         $document = $this->getDocument($attributes);
 
@@ -253,7 +253,7 @@
         $rap = $document->getRootAndPath();
 {% endif %}
 
-        $attributes = new \Level3\Resource\Parameters(array(
+        $attributes = new \Level3\Messages\Parameters(array(
 {% if config_class.isEmbedded %}
             $key[count($key)-2] . 'Id' => (string) $rap['root']->getId(),
 {% endif %}

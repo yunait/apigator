@@ -64,7 +64,7 @@ class EmbeddedRepositoryTest extends TestCase
     protected function level3ShouldReceiveGetURI()
     {
         $this->level3->shouldReceive('getURI')
-            ->with("article/sources", null, m::type('Level3\Resource\Parameters'))->once()
+            ->with("article/sources", null, m::type('Level3\Messages\Parameters'))->once()
             ->andReturn(self::EXAMPLE_URI);
     }
     
@@ -86,7 +86,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
 
-        $this->assertCount(9, $resource->getData());
+        $this->assertCount(8, $resource->getData());
     }
 
     public function testPost()
@@ -106,7 +106,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(8, $data);
         $this->assertSame($data['name'], 'bar');
 
     }
@@ -140,7 +140,7 @@ class EmbeddedRepositoryTest extends TestCase
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
 
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(8, $data);
         $this->assertSame($data['name'], 'bar');
     }
 
@@ -165,7 +165,7 @@ class EmbeddedRepositoryTest extends TestCase
 
         $this->assertInstanceOf('Rest\SourceResource', $resource);
         $data = $resource->getData();
-        $this->assertCount(9, $data);
+        $this->assertCount(8, $data);
         $this->assertSame($data['name'], 'qux');
     }
 

@@ -167,12 +167,12 @@
     public function fromDocuments(\Level3\Repository $repository, Array $documents)
     {
 {% if extension.isRepositoryNeeded(class) %}
-        $resourceIds = array();
+        $resourceIds = [];
+        $resources = [];
         $lastUpdate = null;
 {% endif %}
         foreach ($documents as $document) {
-            $resource = $repository->createDocumentResource($document);  
-            $this->addResource('resources', $resource);
+            $resources[] = $resource = $repository->createDocumentResource($document);  
 {% if extension.isRepositoryNeeded(class) %}
             if (!$lastUpdate || $lastUpdate <= $resource->getLastUpdate()) {
                 $lastUpdate = $resource->getLastUpdate();
@@ -183,6 +183,8 @@
             }
 {% endif %}
         }
+
+        $this->addResources('resources', $resources);
 
 {% if extension.isRepositoryNeeded(class) %}
 {% if config_class.cache %}
@@ -203,7 +205,7 @@
     {
         $this->isDataInitialized = true;
 
-        $data = array();
+        $data = [];
 
 {# fields #}
 {% if extension.isRepositoryNeeded(class) or 'id' in config_class.fields|keys %}
@@ -232,7 +234,7 @@
 
 {# referencesMany #}
 {% for name, config in config_class.referencesMany %}
-        $data['{{ name }}'] = array();
+        $data['{{ name }}'] = [];
         foreach ((array) $this->document->get{{ config.field|ucfirst }}() as $referenced) {
             $data['{{ name }}'][] = (string) $referenced;
         }
@@ -240,21 +242,20 @@
 {% endfor %}
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
-        $data['{{ name }}'] = null;
         if (${{ name }} = $this->document->get{{ name|ucfirst }}()) {
             $resource = $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }});
-            $data['{{ name }}'] = $resource->toArray();
+            $this->addResource('{{ name }}', $resource);
         }
 
 {% endfor %}
 {# embeddedsMany #}
 {% for name, config in config_class.embeddedsMany %}
-        $data['{{ name }}'] = array();
+        $resources = [];
         foreach($this->document->get{{ name|ucfirst }}() as $embedded) {
-            $resource = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
-            $data['{{ name }}'][] = $resource->toArray();
+            $resources[] = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
         }
-
+        
+        $this->addResources('{{ name }}', $resources);
 {% endfor %}
 
         $this->setData(array_merge($data, parent::getData()));
@@ -286,7 +287,7 @@
 {% else %}
         $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
 {% endif %}
-        $resources = array();
+        $resources = [];
         foreach ($this->document->get{{ name|ucfirst }}() as $referenced) {
             $resources[] = $resource = $repository->createDocumentResource($referenced);
         }

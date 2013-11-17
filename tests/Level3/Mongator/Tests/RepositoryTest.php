@@ -27,7 +27,7 @@ class RepositoryTest extends TestCase
 
         $this->document = $this->factory->quick('Model\Article', array(
             'id' => $mongoId,
-            'author' => 1,
+            'author',
             'categories' => 2
         ));
 
@@ -59,7 +59,7 @@ class RepositoryTest extends TestCase
     protected function level3ShouldReceiveGetURI()
     {
         $this->level3->shouldReceive('getURI')
-            ->with('article', null, m::type('Level3\Resource\Parameters'))->once()
+            ->with('article', null, m::type('Level3\Messages\Parameters'))->once()
             ->andReturn(self::EXAMPLE_URI);
     }
     
@@ -102,7 +102,7 @@ class RepositoryTest extends TestCase
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         $data = $resource->getData();       
 
-        $this->assertCount(16, $data);
+        $this->assertCount(12, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
 
     }
@@ -133,7 +133,7 @@ class RepositoryTest extends TestCase
         $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
 
         $data = $resource->getData();
-        $this->assertCount(16, $data);
+        $this->assertCount(12, $data);
         $this->assertInstanceOf('DateTime', $document->getDate());
     }
 
@@ -156,7 +156,7 @@ class RepositoryTest extends TestCase
         $this->assertInstanceOf('Rest\ArticleResource', $resource);
         
         $data = $resource->getData();
-        $this->assertCount(16, $data);
+        $this->assertCount(12, $data);
         $this->assertInstanceOf('DateTime', $this->document->getDate());
     }
 

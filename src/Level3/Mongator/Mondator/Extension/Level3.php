@@ -240,7 +240,7 @@ EOF
         );
 
         $this->definitions['resource_base'] = $this->createDefinition(
-            $classes['resource_base'], 'Level3\Resource',
+            $classes['resource_base'], 'Level3\Resource\Resource',
             true, 'Resource'
         );
 

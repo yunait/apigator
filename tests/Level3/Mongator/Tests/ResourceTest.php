@@ -1,14 +1,5 @@
 <?php
 
-/*
- * This file is part of Mongator.
- *
- * (c) Máximo Cuadros <maximo@yunait.com>
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
-
 namespace Level3\Mongator\Tests;
 
 use Rest\ArticleResource;
@@ -78,11 +69,13 @@ class ResourceTest extends TestCase
         $resource->fromDocument($document);
 
         $resources = $resource->getData();
+        $this->assertCount(12, $resources);
 
-        $this->assertCount(16, $resources);
-        $this->assertCount(0, $resources['source']);
-        $this->assertCount(1, $resources['simpleEmbedded']);
+        $resources = $resource->getAllResources();
         $this->assertCount(2, $resources['comments']);
+        $this->assertCount(0, $resources['sources']);
+        $this->assertInstanceOf('Rest\SourceResource', $resources['source']);
+        $this->assertInstanceOf('Rest\SimpleEmbeddedResource', $resources['simpleEmbedded']);
     }
 
     public function testFromDocumentLinks()
@@ -111,18 +104,15 @@ class ResourceTest extends TestCase
 
         $resource->fromDocument($document);
 
-        $links = $resource->getAllLinks();
+        $links = $resource->getAllLinkedResources();
 
         $this->assertCount(3, $links);
-        $this->assertSame('author/foo', $links['author']->getHref());
-        $this->assertSame('information/foo', $links['information']->getHref());
+        $this->assertInstanceOf('Rest\AuthorResource', $links['author']);
+        $this->assertInstanceOf('Rest\ArticleResource', $links['information']);
 
         $this->assertCount(2, $links['categories']);
-        $this->assertSame('category/foo', $links['categories'][0]->getHref());
-        $this->assertSame('category/foo', $links['categories'][1]->getHref());
-
-        $categories = $document->getCategories();
-        $this->assertSame('foo', $links['categories'][0]->getName());
+        $this->assertInstanceOf('Rest\CategoryResource', $links['categories'][0]);
+        $this->assertInstanceOf('Rest\CategoryResource', $links['categories'][1]);
     }
 
     public function testFormatToDocument()
