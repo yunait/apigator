@@ -238,26 +238,27 @@
         }
 
 {% endfor %}
+        
+        $this->setData(array_merge($data, parent::getData()));
+
 {# embeddedsOne #}
 {% for name, config in config_class.embeddedsOne %}
         $data['{{ name }}'] = null;
         if (${{ name }} = $this->document->get{{ name|ucfirst }}()) {
             $resource = $this->create{{ name|ucfirst }}EmbeddedResource(${{ name }});
-            $data['{{ name }}'] = $resource->toArray();
+            $this->addResource('{{ name }}', $resource);
         }
 
 {% endfor %}
 {# embeddedsMany #}
 {% for name, config in config_class.embeddedsMany %}
-        $data['{{ name }}'] = array();
+        $data['{{ name }}'] = array(); $resources = [];
         foreach($this->document->get{{ name|ucfirst }}() as $embedded) {
-            $resource = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
-            $data['{{ name }}'][] = $resource->toArray();
+            $resources[] = $this->create{{ name|ucfirst }}EmbeddedResource($embedded);
         }
 
+        $this->addResources('{{ name }}', $resources);
 {% endfor %}
-
-        $this->setData(array_merge($data, parent::getData()));
     }
 
     protected function setLinkedResourcesFromDocument()
@@ -363,6 +364,15 @@
         return ($this->document->getId() . $this->getLastUpdate()->getTimestamp());
     }
 
+    public function getTitle()
+    {
+        if (method_exists($this->document, '__toString')) {
+            return (string) $this->document;
+        }
+
+        return null;
+    }
+
     public function getAllLinkedResources()
     {
         if (!$this->areLinkedResourcesInitialized) {
@@ -414,22 +424,6 @@
         }
 
         return parent::getData();
-    }
-
-    public function getSelfLink()
-    {
-        $link = parent::getSelfLink();
-        if (!$link) {
-            return $link;
-        }
-
-        $link->setName((string) $this->document->getId());
-
-        if (method_exists($this->document,'__toString')) {
-            $link->setTitle((string) $this->document);
-        }
-
-        return $link;
     }
 
 {% if extension.isRepositoryNeeded(class) %}
