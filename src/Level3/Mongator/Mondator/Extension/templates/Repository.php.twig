@@ -8,20 +8,18 @@
         $this->mongator = $mongator;
     }
 
-    public function find(\Level3\Messages\Parameters $attributes, \Level3\Messages\Parameters $filters)
+    public function find(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $queryParams)
     {
 {% if config_class.isEmbedded %}
         $group = $this->getEmbeddedGroup($attributes);
         $data = $group->all();
 {% else %}
         $query = $this->getDocumentRepository()->createQuery();
-        $this->applyCriteriaToQuery($query, $filters);
-
-        $chunk = $this->getChunk($filters);
-        $result = $chunk->getResult($query);
-
-        $data = $result->getData();
+        $this->applyCriteriaToQuery($query, $queryParams);
+        $this->applySortAndLimits($query, $attributes);
+        $data = $query->all();
 {% endif %}
+
         $resource = new \{{config_class.classes.resource}}($this->level3);
         $resource->fromDocuments($this, $data);
         $resource->setRepositoryKey($this->getKey());
@@ -29,14 +27,14 @@
         return $resource;
     }
 
-    protected function applyCriteriaToQuery($query, \Level3\Messages\Parameters $filters)
+    protected function applyCriteriaToQuery(\Mongator\Query\Query $query, \Symfony\Component\HttpFoundation\ParameterBag $queryParams)
     {
-        foreach ($filters->get('criteria') as $key => $value) {
+        foreach ($queryParams->all() as $key => $value) {
             $this->applyMethodToQuery($query, $key, $value);
         }
     }
 
-    protected function applyMethodToQuery($query, $criteria, $value)
+    protected function applyMethodToQuery(\Mongator\Query\Query $query, $criteria, $value)
     {
         $method = sprintf('find%s', ucfirst($criteria));
 
@@ -49,30 +47,25 @@
         $query->$method($value);
     }
 
-    protected function getChunk(\Level3\Messages\Parameters $filters)
+    protected function applySortAndLimits(\Mongator\Query\Query $query, \Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
-        list($page, $pageSize) = $this->boundsToPageAndPageSize($filters);
-
-        $chunk = new \Mongator\Query\Chunk();
-        $chunk->set($filters->get('sort'), $page, $pageSize);
-        
-        return $chunk;
-    }
-
-    protected function boundsToPageAndPageSize(\Level3\Messages\Parameters $filters)
-    {
-        $range = $filters->get('range');
-
-        $pageSize = 100;
-        if ((int) $range[1] != 0) {
-            $pageSize = min($range[1] - $range[0] + 1, $pageSize);
+        $sort = $attributes->get('_sort');
+        if ($sort) {
+            $query->sort($sort);
         }
 
-        $page = $range[0] / $pageSize;
-        return array($page, $pageSize);
+        $offset = $attributes->get('_offset');
+        if ($offset) {
+            $query->skip($offset);
+        }
+
+        $limit = $attributes->get('_limit');
+        if ($limit) {
+            $query->limit($limit);
+        }
     }
 
-    public function get(\Level3\Messages\Parameters $attributes)
+    public function get(\Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getEmbeddedDocument($attributes);
@@ -83,10 +76,10 @@
         return $this->createDocumentResource($document);
     }
 
-    public function post(\Level3\Messages\Parameters $attributes, Array $data)
+    public function post(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $data)
     {
         $document = $this->createDocument($attributes);
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -98,7 +91,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function put(\Level3\Messages\Parameters $attributes, Array $data)
+    public function put(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $data)
     {
 {% if config_class.isEmbedded %}
         $orignalDocument = $this->getEmbeddedDocument($attributes);
@@ -108,7 +101,7 @@
         $data['id'] = (string) $orignalDocument->getId();
 
         $document = $this->createDocument($attributes);
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -128,7 +121,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function patch(\Level3\Messages\Parameters $attributes, Array $data)
+    public function patch(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $data)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getEmbeddedDocument($attributes);
@@ -137,7 +130,7 @@
 {% endif %}
         unset($data['id']);
         
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
 {% if config_class.isEmbedded %}
 
         $rap = $document->getRootAndPath();
@@ -149,7 +142,7 @@
         return $this->createDocumentResource($document);
     }
 
-    public function delete(\Level3\Messages\Parameters $attributes)
+    public function delete(\Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
 {% if config_class.isEmbedded %}
         $embedded = $this->getEmbeddedDocument($attributes);
@@ -168,7 +161,7 @@
     }
 
 
-    protected function createDocument(\Level3\Messages\Parameters  $attributes)
+    protected function createDocument(\Symfony\Component\HttpFoundation\ParameterBag  $attributes)
     {
 {% if config_class.isEmbedded %}
         $document = $this->getDocument($attributes);
@@ -184,7 +177,7 @@
 {% endif %}
     }
 
-    protected function getDocument(\Level3\Messages\Parameters $attributes)
+    protected function getDocument(\Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
         $key = explode('/', $this->getKey());
 {% if config_class.isEmbedded %}
@@ -202,7 +195,7 @@
     }
 
 {% if config_class.isEmbedded %}
-    protected function getEmbeddedDocument(\Level3\Messages\Parameters $attributes)
+    protected function getEmbeddedDocument(\Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
         $key = explode('/', $this->getKey());
         $group = $this->getEmbeddedGroup($attributes);
@@ -220,7 +213,7 @@
 {% endif %}
 
 {% if config_class.isEmbedded %}
-    protected function getEmbeddedGroup(\Level3\Messages\Parameters $attributes)
+    protected function getEmbeddedGroup(\Symfony\Component\HttpFoundation\ParameterBag $attributes)
     {
         $document = $this->getDocument($attributes);
 
@@ -253,7 +246,7 @@
         $rap = $document->getRootAndPath();
 {% endif %}
 
-        $attributes = new \Level3\Messages\Parameters(array(
+        $attributes = new \Symfony\Component\HttpFoundation\ParameterBag(array(
 {% if config_class.isEmbedded %}
             $key[count($key)-2] . 'Id' => (string) $rap['root']->getId(),
 {% endif %}
