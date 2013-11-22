@@ -79,7 +79,7 @@
     public function post(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $data)
     {
         $document = $this->createDocument($attributes);
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -101,7 +101,7 @@
         $data['id'] = (string) $orignalDocument->getId();
 
         $document = $this->createDocument($attributes);
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
 
 {% if config_class.isEmbedded %}
         $rap = $document->getRootAndPath();
@@ -130,7 +130,7 @@
 {% endif %}
         unset($data['id']);
         
-        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->toArray()));
+        $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
 {% if config_class.isEmbedded %}
 
         $rap = $document->getRootAndPath();
