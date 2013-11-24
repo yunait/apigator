@@ -98,7 +98,7 @@
 {% else %}
         $orignalDocument = $this->getDocument($attributes);
 {% endif %}
-        $data['id'] = (string) $orignalDocument->getId();
+        $data->set('id', (string) $orignalDocument->getId());
 
         $document = $this->createDocument($attributes);
         $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
@@ -128,7 +128,7 @@
 {% else %}
         $document = $this->getDocument($attributes);
 {% endif %}
-        unset($data['id']);
+        $data->remove('id');
         
         $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
 {% if config_class.isEmbedded %}

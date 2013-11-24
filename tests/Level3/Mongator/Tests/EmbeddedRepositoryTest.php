@@ -12,6 +12,7 @@
 namespace Level3\Mongator\Tests;
 
 use Rest\SourceRepository;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Mockery as m;
 
 class EmbeddedRepositoryTest extends TestCase
@@ -64,7 +65,7 @@ class EmbeddedRepositoryTest extends TestCase
     protected function level3ShouldReceiveGetURI()
     {
         $this->level3->shouldReceive('getURI')
-            ->with("article/sources", null, m::type('Level3\Messages\Parameters'))->once()
+            ->with("article/sources", null, m::type('Symfony\Component\HttpFoundation\ParameterBag'))->once()
             ->andReturn(self::EXAMPLE_URI);
     }
     
@@ -96,7 +97,7 @@ class EmbeddedRepositoryTest extends TestCase
             ->shouldReceive('get')->with('articleId')
             ->andReturn(self::VALID_MONGO_ID_B);
 
-        $data = array('name' => 'bar');
+        $data = new ParameterBag(array('name' => 'bar'));
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
@@ -122,8 +123,12 @@ class EmbeddedRepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $expectedData = $data = array('name' => 'bar');
-        $expectedData['id'] = $mongoId;
+
+        $data = $this->createParametersMock();
+        $data->shouldReceive('set')
+            ->with('id', (string) $mongoId)->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn(['name' => 'bar']);
 
         $document = $this->factory->quick('Model\Article', array(), false);
 
@@ -155,8 +160,11 @@ class EmbeddedRepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $data = $expectedData = array('name' => 'qux');
-        $data['id'] = $mongoId;
+        $data = $this->createParametersMock();
+        $data->shouldReceive('remove')
+            ->with('id')->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn(['name' => 'qux']);
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();

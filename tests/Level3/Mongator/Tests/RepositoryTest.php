@@ -59,7 +59,7 @@ class RepositoryTest extends TestCase
     protected function level3ShouldReceiveGetURI()
     {
         $this->level3->shouldReceive('getURI')
-            ->with('article', null, m::type('Level3\Messages\Parameters'))->once()
+            ->with('article', null, m::type('Symfony\Component\HttpFoundation\ParameterBag'))->once()
             ->andReturn(self::EXAMPLE_URI);
     }
     
@@ -95,7 +95,11 @@ class RepositoryTest extends TestCase
             ->shouldReceive('create')->withNoArgs()->once()
             ->andReturn($this->document);
 
-       
+        $data = $this->createParametersMock();
+        $data->shouldReceive('set')
+            ->with('id', (string) $document->getId())->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn(['date' => self::VALID_ISO_DATE]);
 
         $resource = $repository->post($atributes, $data);
 
@@ -115,13 +119,17 @@ class RepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $expectedData = $data = array('date' => self::VALID_ISO_DATE);
-        $expectedData['id'] = $mongoId;
-
+        
         $document = $this->factory->quick('Model\Article', array(), false);
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
+        
+        $data = $this->createParametersMock();
+        $data->shouldReceive('set')
+            ->with('id', (string) $this->document->getId())->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn(['date' => self::VALID_ISO_DATE]);
 
         $this->docRepository
             ->shouldReceive('create')->withNoArgs()->once()
@@ -145,8 +153,13 @@ class RepositoryTest extends TestCase
             ->andReturn(self::VALID_MONGO_ID);
 
         $mongoId = new \MongoId(self::VALID_MONGO_ID);
-        $data = $expectedData = array('date' => self::VALID_ISO_DATE);
-        $data['id'] = $mongoId;
+        
+        $data = $this->createParametersMock();
+        $data->shouldReceive('remove')
+            ->with('id')->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn(['date' => self::VALID_ISO_DATE]);
+
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
@@ -182,16 +195,24 @@ class RepositoryTest extends TestCase
     public function testFind()
     {
         $atributes = $this->createParametersMock();
+        $atributes
+            ->shouldReceive('get')->with('_limit')
+            ->andReturn(40);
+        $atributes
+            ->shouldReceive('get')->with('_offset')
+            ->andReturn(10);
+        $atributes
+            ->shouldReceive('get')->with('_sort')
+            ->andReturn($sort = array('foo' => 'bar'));
+        $atributes
+            ->shouldReceive('get')->with('_criteria')
+            ->andReturn(array('qux' => 'baz'));
+
         $filters = $this->createParametersMock();
         $filters
-            ->shouldReceive('get')->with('range')
-            ->andReturn(array(10, 50));
-        $filters
-            ->shouldReceive('get')->with('sort')
-            ->andReturn($sort = array('foo' => 'bar'));
-        $filters
-            ->shouldReceive('get')->with('criteria')
-            ->andReturn(array('qux' => 'baz'));
+            ->shouldReceive('all')->with()->once()
+            ->andReturn([]);
+
 
         $repository = $this->getRepository();
 
@@ -209,7 +230,7 @@ class RepositoryTest extends TestCase
             ->andReturn($query);
 
         $query
-            ->shouldReceive('limit')->with(41)->once()
+            ->shouldReceive('limit')->with(40)->once()
             ->andReturn($query);
 
         $query
