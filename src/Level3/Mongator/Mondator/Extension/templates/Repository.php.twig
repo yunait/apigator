@@ -29,7 +29,7 @@
         $query = $this->getDocumentRepository()->createQuery();
         $this->applyCriteriaToQuery($query, $queryParams);
         $this->applySortAndLimits($query, $attributes);
-        $data = $query->all();
+        return $query->all();
     }
 
     protected function applyCriteriaToQuery(\Mongator\Query\Query $query, \Symfony\Component\HttpFoundation\ParameterBag $queryParams)
