@@ -14,10 +14,7 @@
         $group = $this->getEmbeddedGroup($attributes);
         $data = $group->all();
 {% else %}
-        $query = $this->getDocumentRepository()->createQuery();
-        $this->applyCriteriaToQuery($query, $queryParams);
-        $this->applySortAndLimits($query, $attributes);
-        $data = $query->all();
+        $data = $this->getDataForFind($attributes, $queryParams);
 {% endif %}
 
         $resource = new \{{config_class.classes.resource}}($this->level3);
@@ -25,6 +22,14 @@
         $resource->setRepositoryKey($this->getKey());
 
         return $resource;
+    }
+
+    protected function getDataForFind(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $queryParams)
+    {
+        $query = $this->getDocumentRepository()->createQuery();
+        $this->applyCriteriaToQuery($query, $queryParams);
+        $this->applySortAndLimits($query, $attributes);
+        $data = $query->all();
     }
 
     protected function applyCriteriaToQuery(\Mongator\Query\Query $query, \Symfony\Component\HttpFoundation\ParameterBag $queryParams)
