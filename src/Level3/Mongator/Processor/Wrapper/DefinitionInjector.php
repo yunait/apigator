@@ -3,10 +3,11 @@
 namespace Level3\Mongator\Processor\Wrapper;
 
 use Mongator\Mongator;
+use Level3\Repository;
 use Level3\Messages\Request;
 use Level3\Messages\Response;
 use Level3\Processor\Wrapper;
-use Level3\Resource;
+use Level3\Resource\Resource;
 use Closure;
 
 class DefinitionInjector extends Wrapper
@@ -18,16 +19,16 @@ class DefinitionInjector extends Wrapper
         $this->mongator = $mongator;
     }
 
-    public function error(Closure $execution, Request $request)
+    public function error(Repository $repository, Request $request, Callable $execution)
     {
         return $execution($request);
     }
     
-    protected function processRequest(Closure $execution, Request $request, $method)
+    protected function processRequest(Repository $repository, Request $request, Callable $execution, $method)
     {
-        $response = $execution($request);
+        $response = $execution($repository, $request);
 
-        $key = $request->getKey();
+        $key = $repository->getKey();
         $resource = $response->getResource();
 
         if (!$key || !$resource) {
