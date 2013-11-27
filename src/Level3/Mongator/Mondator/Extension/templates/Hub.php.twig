@@ -6,15 +6,25 @@
     public function __construct(\Mongator\Mongator $mongator)
     {
         $this->mongator = $mongator;
-        $this->documentClassToMap = array(
+        $this->documentClassToMap = [
 {% for key, class in extension.getMapping() %}
             '{{ class }}' => '{{ key }}',
 {% endfor %} 
-        );
+        ];
     }
 
     public function registerDefinitions()
     {
+        $this->registerDefinition(
+            'metadata', 
+            function(\Level3\Level3 $level3) {
+                return new \Level3\Mongator\Helper\MetadataRepository(
+                    $level3,
+                    $this->mongator
+                );
+            }
+        ); 
+        
 {% for key, class in extension.getMapping() %}
         $this->registerDefinition(
             '{{ key }}', 
@@ -28,12 +38,10 @@
 {% if 'repository' in config.classes|keys %}
     protected function get{{ class|replace({'\\': ''}) }}Repository()
     {
-        $self = $this;
-
-        return function(\Level3\Level3 $level3) use ($self) {
+        return function(\Level3\Level3 $level3) {
             return new \{{ config.classes.repository }}(
                 $level3,
-                $self->mongator
+                $this->mongator
             );
         };
     }
