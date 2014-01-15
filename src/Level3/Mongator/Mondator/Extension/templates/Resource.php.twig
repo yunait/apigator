@@ -450,9 +450,11 @@
             return $lastUpdate;
         }
 
+{% if 'updatedField' in config.options|keys %}
         if ($updated = $this->document->get{{ config.options.updatedField|ucfirst }}()) {
             return $updated;
-        } 
+        }
+{% endif %}  
 
         return $this->document->get{{ config.options.createdField|ucfirst }}();
     }
