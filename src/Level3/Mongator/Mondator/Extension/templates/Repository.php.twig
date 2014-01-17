@@ -186,18 +186,72 @@
     {
         $key = explode('/', $this->getKey());
 {% if config_class.isEmbedded %}
-        $id = $this->castStringToMongoId($attributes->get($key[count($key)-2] . 'Id'));
+        $id = $attributes->get($key[count($key)-2] . 'Id');
 {% else %}
-        $id = $this->castStringToMongoId($attributes->get($key[count($key)-1] . 'Id'));
+        $id = $attributes->get($key[count($key)-1] . 'Id');
 {% endif %}
-        $documents = $this->getDocumentRepository()->findById(array($id));
+
+
+{% if extension.hasUniqueIndexes() %}
+        if (false === $pos = strpos($id, ':')) {
+            $document = $this->getDocumentById($id);
+        } else {
+            $field = substr($id, 0, $pos);
+            $value = substr($id, $pos + 1);
+            switch ($field) {
+{% for index in extension.getUniqueIndexes() %}
+                case '{{index}}':
+                    $document = $this->getDocumentBy{{index|ucfirst}}($value);
+                    break;
+{% endfor %}
+                default:
+                    throw new \Level3\Exceptions\BadRequest(
+                        sprintf('Invalid key type "%s"', $field)
+                    );
+            }
+        }
+{% else %}
+        $document = $this->getDocumentById($id);
+{% endif %}
+
+        if ($document) {
+            return $document;
+        } 
+
+        throw new \Level3\Exceptions\NotFound();
+    }
+
+
+    protected function getDocumentById($id)
+    {
+        $mongoId = $this->castStringToMongoId($id);
+        $documents = $this->getDocumentRepository()->findById(array($mongoId));
         
         if ($documents) {
             return end($documents);
-        } else {
-            throw new \Level3\Exceptions\NotFound();
-        }
+        } 
+
+        return null;
     }
+
+{% for index in extension.getUniqueIndexes() %}
+    protected function getDocumentBy{{index|ucfirst}}($id)
+    {
+
+{% if config_class.fields[index].type == 'integer' %}
+        $id = (int)$id;
+{% elseif config_class.fields[index].type == 'string' %}
+        $id = (string)$id;
+{% elseif config_class.fields[index].type == 'float' %}
+        $id = (float)$id;
+{% endif %}
+
+        $query = $this->getDocumentRepository()->createQuery();
+        $this->applyMethodToQuery($query, 'by{{index|ucfirst}}', $id);
+
+        return $query->one();
+    }
+{% endfor %}
 
 {% if config_class.isEmbedded %}
     protected function getEmbeddedDocument(\Symfony\Component\HttpFoundation\ParameterBag $attributes)

@@ -300,6 +300,42 @@ EOF
         return false;
     }
 
+    public function hasUniqueIndexes($class = null)
+    {
+        $indexes = $this->getUniqueIndexes($class);
+        
+        return (bool)$indexes;
+    }
+
+    public function getUniqueIndexes($class = null)
+    {
+        if (!$class) {
+            $class = $this->class;
+        }
+
+        $config = $this->configClasses[$class];
+        if (!isset($config['indexes'])) {
+            return true;
+        }
+
+        $indexes = array();
+        foreach ($config['indexes'] as $index) {
+            if (!isset($index['options']['unique'])) {
+                continue;
+            }
+
+            if (count($index['keys']) > 1) {
+                continue;
+            }
+
+            $keys = array_keys($index['keys']);
+            $indexes[] = end($keys);
+        }
+     
+        return array_unique($indexes);   
+    }
+
+
     protected function getClassName($className = null)
     {
         if (!$className) {
