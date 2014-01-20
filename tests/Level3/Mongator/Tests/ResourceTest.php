@@ -69,7 +69,7 @@ class ResourceTest extends TestCase
         $resource->fromDocument($document);
 
         $resources = $resource->getData();
-        $this->assertCount(12, $resources);
+        $this->assertCount(13, $resources);
 
         $resources = $resource->getAllResources();
         $this->assertCount(2, $resources['comments']);

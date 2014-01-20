@@ -187,11 +187,16 @@
         $key = explode('/', $this->getKey());
 {% if config_class.isEmbedded %}
         $id = $attributes->get($key[count($key)-2] . 'Id');
+        return $this->getParentRepository()->doGetDocument($id);
 {% else %}
         $id = $attributes->get($key[count($key)-1] . 'Id');
+        return $this->doGetDocument($id);
 {% endif %}
+    }
 
 
+    public function doGetDocument($id)
+    {
 {% if extension.hasUniqueIndexes() %}
         if (false === $pos = strpos($id, ':')) {
             $document = $this->getDocumentById($id);
@@ -290,13 +295,20 @@
     public function getDocumentRepository()
     {
 {% if config_class.isEmbedded %}
-        $key = explode('/', $this->getKey());
-        array_pop($key);
-        return $this->level3->getHub()->get(implode('/', $key))->getDocumentRepository();
+        return $this->getParentRepository()->getDocumentRepository();
 {% else %}
         return $this->mongator->getRepository('{{ class }}');
 {% endif %}
     }
+
+{% if config_class.isEmbedded %}
+    public function getParentRepository()
+    {
+        $key = explode('/', $this->getKey());
+        array_pop($key);
+        return $this->level3->getHub()->get(implode('/', $key));
+    }
+{% endif %}
 
     public function getDocumentURI(\{{ class }} $document)
     {

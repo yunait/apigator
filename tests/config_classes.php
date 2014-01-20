@@ -10,6 +10,7 @@ return array(
             'note'     => 'string',
             'line'     => 'string',
             'text'     => 'string',
+            'slug'     => 'string',
             'isActive' => 'boolean',
             'date'     => 'date',
             'database' => array('dbName' => 'basatos', 'type' => 'string'),
