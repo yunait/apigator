@@ -231,11 +231,13 @@
 {% for name, config in config_class.referencesOne %}
 {% if 'polymorphic' in config|keys %}
         $referenced = $this->document->get{{ config.field|ucfirst }}();
-        $data['{{ name }}'] = (string) $referenced['id'];
+        $data['{{ name }}'] = $referenced['id'];
 {% else %}
-        $data['{{ name }}'] = (string) $this->document->get{{ config.field|ucfirst }}();
+        $data['{{ name }}'] = $this->document->get{{ config.field|ucfirst }}();
 {% endif %}
-
+        if ($data['{{ name }}']) {
+            $data['{{ name }}'] = (string) $data['{{ name }}'];
+        }
 
 {% endfor %}
 
