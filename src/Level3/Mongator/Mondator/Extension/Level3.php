@@ -40,6 +40,7 @@ class Level3 extends Extension
         $this->types = new Types();
         $this->types->register(new Type\DateTime());
         $this->types->register(new Type\MongoId());
+        $this->types->register(new Type\Float());
     }
 
     protected function setup()
