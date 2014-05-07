@@ -45,6 +45,7 @@ class EmbeddedRepositoryTest extends TestCase
         $articleRepository = m::mock('Rest\ArticleResource');
         $articleRepository->shouldReceive('getDocumentRepository')->withNoArgs()
             ->andReturn($this->docRepository);
+        $articleRepository->shouldReceive('doGetDocument')->andReturn($this->document);
 
         $this->hub = $this->createHubMock();
 
