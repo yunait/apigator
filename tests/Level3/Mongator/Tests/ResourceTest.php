@@ -69,7 +69,7 @@ class ResourceTest extends TestCase
         $resource->fromDocument($document);
 
         $resources = $resource->getData();
-        $this->assertCount(13, $resources);
+        $this->assertCount(14, $resources);
 
         $resources = $resource->getAllResources();
         $this->assertCount(2, $resources['comments']);
@@ -233,6 +233,30 @@ class ResourceTest extends TestCase
         );
 
         $result = ArticleResource::formatToDocument($data);
+    }
+
+    public function testFloatCastInFormatToDocument()
+    {
+        $data = array(
+            'id' => self::VALID_MONGO_ID,
+            'date' => self::VALID_ISO_DATE,
+            'price' => 5,
+            'source' => array(
+                'id' => self::VALID_MONGO_ID,
+            ),
+            'comments' => array(
+                array('date' => self::VALID_ISO_DATE),
+                array('date' => self::VALID_ISO_DATE)
+            ),
+            'author' => self::VALID_MONGO_ID,
+            'categories' => array(
+                self::VALID_MONGO_ID,
+                self::VALID_MONGO_ID
+            )
+        );
+
+        $result = ArticleResource::formatToDocument($data);
+        $this->assertInternalType('float', $result['price']);
     }
 
     protected function defineFactoryDefaults()

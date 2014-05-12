@@ -12,6 +12,7 @@ return array(
             'text'     => 'string',
             'slug'     => 'string',
             'isActive' => 'boolean',
+            'price'    => 'float',
             'date'     => 'date',
             'database' => array('dbName' => 'basatos', 'type' => 'string'),
         ),
