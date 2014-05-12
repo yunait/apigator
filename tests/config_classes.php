@@ -30,7 +30,7 @@ return array(
             'information' => array('class' => 'Model\ArticleInformation', 'field' => 'informationId', 'onDelete' => 'unset')
         ),
         'referencesMany' => array(
-            'categories' => array('class' => 'Model\Category', 'field' => 'categoryIds', 'onDelete' => 'unset'),
+            'categories' => array('class' => 'Model\Category', 'onDelete' => 'unset'),
         ),
         'relationsManyThrough' => array(
             'votesUsers' => array('class' => 'Model\User', 'through' => 'Model\ArticleVote', 'local' => 'article', 'foreign' => 'user'),

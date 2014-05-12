@@ -109,6 +109,7 @@
                 throw new \Level3\Exceptions\BadRequest();
             }
 
+            $data['{{ name }}_reference_field'] = array();
             $count = count($data['{{ name }}']);
             for ($i=0;$i < $count ;$i++) { 
                 $string = (string) $data['{{ name }}'][$i];
@@ -126,6 +127,7 @@
 
             unset($data['{{ name }}']);
         }
+
 
 {% endfor %}
         
