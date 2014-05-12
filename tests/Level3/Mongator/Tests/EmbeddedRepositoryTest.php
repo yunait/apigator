@@ -129,16 +129,14 @@ class EmbeddedRepositoryTest extends TestCase
         $data->shouldReceive('set')
             ->with('id', (string) $mongoId)->once()->andReturn();
         $data->shouldReceive('all')
-            ->with()->once()->andReturn(['name' => 'bar']);
+            ->with()->once()->andReturn([
+                'id' => self::VALID_MONGO_ID,
+                'name' => 'foo'
+            ]);
 
-        $document = $this->factory->quick('Model\Article', array(), false);
 
         $repository = $this->getRepository();
         $this->level3ShouldReceiveGetURI();
-
-        $this->docRepository
-            ->shouldReceive('create')->withNoArgs()->once()
-            ->andReturn($document);
 
         $resource = $repository->put($attributes, $data);
 
@@ -147,7 +145,10 @@ class EmbeddedRepositoryTest extends TestCase
 
         $data = $resource->getData();
         $this->assertCount(8, $data);
-        $this->assertSame($data['name'], 'bar');
+        $this->assertSame($data['name'], 'foo');
+
+        $this->document->refresh();
+        $this->assertCount(1, $this->document->getSources()->all());
     }
 
     public function testPatch()

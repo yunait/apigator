@@ -121,8 +121,8 @@
         $removeMethod = sprintf('remove%s', ucfirst(end($key)));
         $addMethod = sprintf('add%s', ucfirst(end($key)));
 
+        $rap['root']->save();
         $rap['root']->$removeMethod($orignalDocument);
-        $rap['root']->$addMethod($document);
         $rap['root']->save();
 {% else %}
         $document->setIsNew(false);
