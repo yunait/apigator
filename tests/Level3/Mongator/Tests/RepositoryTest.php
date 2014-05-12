@@ -145,6 +145,42 @@ class RepositoryTest extends TestCase
         $this->assertInstanceOf('DateTime', $document->getDate());
     }
 
+    public function testPutModifyReferenceMany()
+    {
+        $atributes = $this->createParametersMock();
+        $atributes
+            ->shouldReceive('get')->with('articleId')
+            ->andReturn(self::VALID_MONGO_ID);
+
+        $mongoId = new \MongoId(self::VALID_MONGO_ID);
+
+        $document = $this->factory->quick('Model\Article', array(), false);
+
+        $repository = $this->getRepository();
+        $this->level3ShouldReceiveGetURI();
+
+        $data = $this->createParametersMock();
+        $data->shouldReceive('set')
+            ->with('id', (string) $this->document->getId())->once()->andReturn();
+        $data->shouldReceive('all')
+            ->with()->once()->andReturn([
+                'id' => $this->document->getId(),
+                'categories' => []
+            ]);
+
+        $this->docRepository
+            ->shouldReceive('create')->withNoArgs()->once()
+            ->andReturn($document);
+
+        $resource = $repository->put($atributes, $data);
+
+        $this->assertInstanceOf('Rest\ArticleResource', $resource);
+        $this->assertSame(self::EXAMPLE_URI, $resource->getURI());
+
+        $this->document->refresh();
+        $this->assertCount(0, $this->document->getCategories()->all());
+    }
+
     public function testPatch()
     {
         $atributes = $this->createParametersMock();

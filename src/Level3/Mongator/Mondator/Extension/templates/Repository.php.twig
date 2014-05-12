@@ -105,12 +105,11 @@
     public function put(\Symfony\Component\HttpFoundation\ParameterBag $attributes, \Symfony\Component\HttpFoundation\ParameterBag $data)
     {
 {% if config_class.isEmbedded %}
-        $orignalDocument = $this->getEmbeddedDocument($attributes);
+        $originalDocument = $this->getEmbeddedDocument($attributes);
 {% else %}
-        $orignalDocument = $this->getDocument($attributes);
+        $originalDocument = $this->getDocument($attributes);
 {% endif %}
-        $data->set('id', (string) $orignalDocument->getId());
-
+        $data->set('id', (string) $originalDocument->getId());
         $document = $this->createDocument($attributes);
         $document->fromArray(\{{config_class.classes.resource}}::formatToDocument($data->all()));
 
@@ -122,7 +121,7 @@
         $addMethod = sprintf('add%s', ucfirst(end($key)));
 
         $rap['root']->save();
-        $rap['root']->$removeMethod($orignalDocument);
+        $rap['root']->$removeMethod($originalDocument);
         $rap['root']->save();
 {% else %}
         $document->setIsNew(false);
