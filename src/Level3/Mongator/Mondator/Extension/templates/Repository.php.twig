@@ -183,7 +183,7 @@
         $document->$addMethod($embedded);
         return $embedded;
 {% else %}
-        return $this->getDocumentRepository()->create();
+        return $this->mongator->create('{{ class }}');
 {% endif %}
     }
 
