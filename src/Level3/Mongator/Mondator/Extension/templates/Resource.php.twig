@@ -313,6 +313,30 @@
             $this->linkResources('{{ name }}', $resources);
         }
 {% endfor %}
+{# relationsOne #}
+{% for name, config in config_class.relationsOne %}
+        $referenced = $this->document->get{{ name|ucfirst }}();
+        if ($referenced) {
+            $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
+            $resource = $repository->createDocumentResource($referenced);
+            
+            $this->linkResource('{{ name }}', $resource);
+        }
+
+{% endfor %}
+{# relationsManyOne #}
+{% for name, config in config_class.relationsManyOne %}
+        $repository =  $this->getRepository('{{ extension.getRepositoryKey(config.class) }}');
+
+        $resources = [];
+        foreach ($this->document->get{{ name|ucfirst }}() as $referenced) {
+            $resources[] = $resource = $repository->createDocumentResource($referenced);
+        }
+
+        if ($resources) {
+            $this->linkResources('{{ name }}', $resources);
+        }
+{% endfor %}
     }
 
 

@@ -60,9 +60,8 @@ class Level3 extends Extension
         $this->parseAndCheckFieldsProcess();
         $this->parseAndCheckReferencesProcess();
         $this->parseAndCheckEmbeddedsProcess();
-        if (!$this->configClass['isEmbedded']) {
-            $this->parseAndCheckRelationsProcess();
-        }
+        $this->parseAndCheckRelationsProcess();
+    
 
         $this->checkDataNamesProcess();
         $this->initDefinitionsProcess();
@@ -86,6 +85,7 @@ class Level3 extends Extension
  */
 EOF
         );
+
 
         if ($template) {
             $twig = file_get_contents(__DIR__.'/templates/'.$template.'.php.twig');
@@ -440,6 +440,10 @@ EOF
 
     private function parseAndCheckRelationsProcess()
     {
+        if (!isset($this->configClass['relationsOne'])) {
+            $this->configClass['relationsOne'] = array();
+        }
+
         // one
         foreach ($this->configClass['relationsOne'] as $name => &$relation) {
             $this->parseAndCheckAssociationClass($relation, $name);
@@ -447,6 +451,10 @@ EOF
             if (!isset($relation['reference'])) {
                 throw new \RuntimeException(sprintf('The relation one "%s" of the class "%s" does not have reference.', $name, $this->class));
             }
+        }
+
+        if (!isset($this->configClass['relationsManyOne'])) {
+            $this->configClass['relationsManyOne'] = array();
         }
 
         // many_one
@@ -458,6 +466,10 @@ EOF
             }
         }
 
+        if (!isset($this->configClass['relationsManyMany'])) {
+            $this->configClass['relationsManyMany'] = array();
+        }
+
         // many_many
         foreach ($this->configClass['relationsManyMany'] as $name => &$relation) {
             $this->parseAndCheckAssociationClass($relation, $name);
@@ -465,6 +477,10 @@ EOF
             if (!isset($relation['reference'])) {
                 throw new \RuntimeException(sprintf('The relation many many "%s" of the class "%s" does not have reference.', $name, $this->class));
             }
+        }
+
+        if (!isset($this->configClass['relationsManyThrough'])) {
+            $this->configClass['relationsManyThrough'] = array();
         }
 
         // many_through
@@ -496,10 +512,10 @@ EOF
             array_keys($this->configClass['referencesMany']),
             array_keys($this->configClass['embeddedsOne']),
             array_keys($this->configClass['embeddedsMany']),
-            !$this->configClass['isEmbedded'] ? array_keys($this->configClass['relationsOne']) : array(),
-            !$this->configClass['isEmbedded'] ? array_keys($this->configClass['relationsManyOne']) : array(),
-            !$this->configClass['isEmbedded'] ? array_keys($this->configClass['relationsManyMany']) : array(),
-            !$this->configClass['isEmbedded'] ? array_keys($this->configClass['relationsManyThrough']) : array()
+            array_keys($this->configClass['relationsOne']),
+            array_keys($this->configClass['relationsManyOne']),
+            array_keys($this->configClass['relationsManyMany']),
+            array_keys($this->configClass['relationsManyThrough'])
         ) as $name) {
             if (in_array($name, array('Mongator', 'repository', 'collection', 'query_for_save', 'fields_modified', 'document_data'))) {
                 throw new \RuntimeException(sprintf('The document or embeddedDocument cannot be a data with the name "%s".', $name));
