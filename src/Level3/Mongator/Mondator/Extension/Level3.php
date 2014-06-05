@@ -51,6 +51,7 @@ class Level3 extends Extension
         $this->addRequiredOption('namespace');
         $this->addRequiredOption('models_namespace');
         $this->addRequiredOption('hub_loader_class');
+        $this->addRequiredOption('titled_resource_links');
     }
 
     protected function doClassProcess()

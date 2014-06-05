@@ -405,14 +405,17 @@
         return ($this->document->getId() . $this->getLastUpdate()->getTimestamp());
     }
 
+{% if options.titled_resource_links %}
     public function getTitle()
     {
+
         if (method_exists($this->document, '__toString')) {
             return (string) $this->document;
         }
 
         return null;
     }
+{% endif %}
 
     public function getAllLinkedResources()
     {
